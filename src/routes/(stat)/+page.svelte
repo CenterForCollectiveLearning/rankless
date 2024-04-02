@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { flowerPaths, thinFlowerPaths } from '$lib/visual-util';
+	import {flowerPaths, thinFlowerPaths} from '$lib/visual-util';
 	import HexagonLogo from '$lib/components/HexagonLogo.svelte';
 	import Flower from '$lib/components/Flower.svelte';
 	import CircleBurst from '$lib/components/CircleBurst.svelte';
@@ -51,45 +51,32 @@
 <div id="main-container" style="--pwidth: {isWideScreen ? '38%' : '90%'}">
 	<!-- text -->
 	<p id="p-1" style="opacity: {100 - rateScale(0, 0.2) * 100}%;">
-		In a world, where every country dreams of becoming a knowledge powerhouse, we need more than
+		In a world where every country dreams of becoming a knowledge powerhouse, we need more than
 		university rankings.
 	</p>
-	<p
-		id="p-2"
-		style="top: {fixedPin(50, 140, 30)}; opacity: {isWideScreen
+	<p id="p-2" style="top: {fixedPin(50, 140, 30)}; opacity: {isWideScreen
 			? 100
-			: 100 - rateScale(0.6, 0.22) * 100}%"
-	>
+			: 100 - rateScale(0.6, 0.22) * 100}%">
 		Universities are a source of <b>cultural and economic growth</b>. They attract talent, educate
 		the population, and help produce important innovations.
 	</p>
-	<p
-		id="p-3"
-		style="top: {fixedPin(isWideScreen ? 245 : 215, 310, 20)};{isWideScreen ? '' : 'width: 80%'}"
-	>
-		But the impact of universities cannot be reduced to a single number. <b
-			>Knowledge is highly specific</b
-		>, and so is the impact of universities.
+	<p id="p-3" style="top: {fixedPin(isWideScreen ? 245 : 215, 310, 20)};{isWideScreen ? '' : 'width: 80%'}">
+		But the impact of universities cannot be reduced to a single number. <b>Knowledge is highly
+			specific</b>, and so is the impact of universities.
 	</p>
-	<p
-		id="p-4"
-		style="top: {fixedPin(340, 420, 40)};opacity: {100 - rateScale(4.2, 0.2) * 100}%;{isWideScreen
+	<p id="p-4" style="top: {fixedPin(340, 420, 40)};opacity: {100 - rateScale(4.2, 0.2) * 100}%;{isWideScreen
 			? ''
-			: 'width: 75%'}"
-	>
-		Universities specialize in <b>fields</b> and local <b>networks of collaboration</b>.
+			: 'width: 75%'}">
+		Universities specialize in <b>fields</b> and build local <b>networks of collaboration</b>.
 		<span id="inner-4" style="opacity: {rateScale(3.4, 0.2) * 100}%">
 			Isn’t it time we understand them in their right context?
 		</span>
 	</p>
-	<p
-		id="p-5"
-		style="top: {fixedPin(
+	<p id="p-5" style="top: {fixedPin(
 			500,
 			isWideScreen ? 650 : 600,
 			isWideScreen ? 40 : 60
-		)}; width: {isWideScreen ? 38 : 82}%"
-	>
+		)}; width: {isWideScreen ? 38 : 82}%">
 		Take the work done by Oregon State University. Instead of looking at them as one element of a
 		list of Universities of varied focuses, sizes and locations, you can visualize how papers
 		relating to <b id="geol">geology</b> or <b id="geog">geography</b>, are citing articles
@@ -97,8 +84,8 @@
 	</p>
 
 	<p id="p-6" style="top: {fixedPin(710, 780, 20)};">
-		Academic impact is not a single thing, but a rich kaleidoscope of topics and geographies that
-		can be exciting to explore.
+		Academic impact is a rich kaleidoscope of topics and geographies that can be exciting to
+		explore.
 	</p>
 	<!-- TODO: cut off and make the end somewhat shorter -->
 	<p id="p-7" style="top: {isWideScreen ? 40 : 60}svh;opacity: {rateScale(6.9, 0.2) * 100}%">
@@ -111,18 +98,14 @@
 	<!-- decoration -->
 	<div class="bg-bar" id="top-blue" />
 	{#each [...Array(7).keys()].map((x) => 22 + x * 3.75 * (2 - (scrollY / sHeight) * 4)) as topOff}
-		<div class="white-line" style="top: {topOff}svh" />
+	<div class="white-line" style="top: {topOff}svh" />
 	{/each}
 	<div class="bg-bar" id="mid-pink" />
 	<div class="bg-bar" id="purp-bar" />
 	<div class="bg-bar" id="grey-bar" />
 
-	<svg
-		id="logo-img"
-		viewBox="-2.5 -2 4.9 5.3"
-		xmlns="http://www.w3.org/2000/svg"
-		style="opacity: {innerWidth > innerHeight ? 70 : 0}%;"
-	>
+	<svg id="logo-img" viewBox="-2.5 -2 4.9 5.3" xmlns="http://www.w3.org/2000/svg"
+		style="opacity: {innerWidth > innerHeight ? 70 : 0}%;">
 		<HexagonLogo {rotScaler} />
 	</svg>
 
@@ -173,7 +156,7 @@
 		right: 40px;
 	}
 
-	#p-2 > b {
+	#p-2>b {
 		color: var(--color-theme-red);
 	}
 
@@ -239,11 +222,9 @@
 		height: 80svh;
 		top: 0px;
 		opacity: 60%;
-		background-image: linear-gradient(
-			var(--color-theme-lightblue),
-			var(--color-theme-blue) 20%,
-			var(--color-theme-lightgrey)
-		);
+		background-image: linear-gradient(var(--color-theme-lightblue),
+				var(--color-theme-blue) 20%,
+				var(--color-theme-lightgrey));
 	}
 
 	#mid-pink {
@@ -260,28 +241,24 @@
 		width: 75%;
 		margin-left: 25%;
 		top: 350svh;
-		background-image: linear-gradient(
-			180deg,
-			var(--color-theme-pink) 12.5%,
-			var(--color-theme-purple) 46%,
-			var(--color-theme-purple) 70%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		background-image: linear-gradient(180deg,
+				var(--color-theme-pink) 12.5%,
+				var(--color-theme-purple) 46%,
+				var(--color-theme-purple) 70%,
+				rgba(255, 255, 255, 0) 100%);
 	}
 
 	#grey-bar {
 		position: absolute;
 		height: 340svh;
 		top: 460svh;
-		background-image: linear-gradient(
-			0deg,
-			rgba(255, 255, 255, 0),
-			rgba(255, 255, 255, 0) 20%,
-			var(--color-theme-lightgrey) 30%,
-			var(--color-theme-pink) 70%,
-			rgba(255, 255, 255, 0) 80%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		background-image: linear-gradient(0deg,
+				rgba(255, 255, 255, 0),
+				rgba(255, 255, 255, 0) 20%,
+				var(--color-theme-lightgrey) 30%,
+				var(--color-theme-pink) 70%,
+				rgba(255, 255, 255, 0) 80%,
+				rgba(255, 255, 255, 0) 100%);
 	}
 
 	svg {

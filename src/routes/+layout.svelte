@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { APP_NAME } from '$lib/constants';
-	import { base } from '$app/paths';
+	import {APP_NAME} from '$lib/constants';
+	import {base} from '$app/paths';
 	import './styles.css';
 	import TextedLogo from '$lib/components/TextedLogo.svelte';
 	import SearchLogo from '$lib/components/SearchLogo.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
-	import { afterNavigate } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { parse } from 'platform';
-	import { fade } from 'svelte/transition';
+	import {afterNavigate} from '$app/navigation';
+	import {onMount} from 'svelte';
+	import {parse} from 'platform';
+	import {fade} from 'svelte/transition';
 
 	let hPen = 0;
 
-	let uInfo: { product?: string } = {};
+	let uInfo: {product?: string} = {};
 
 	onMount(() => {
 		uInfo = parse(navigator.userAgent);
@@ -89,81 +89,59 @@
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
-		rel="stylesheet"
-	/>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+		rel="stylesheet" />
 	<title>{APP_NAME}</title>
 </svelte:head>
 
 <svelte:window bind:innerWidth />
 {#if innerWidth != undefined}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div id="main-fix" transition:fade={{ duration: 100 }}>
-		<div id="main-head">
-			<TextedLogo pad={headPad} />
-			<SearchResults bind:resultsHidden {searchTerm} />
-			<input
-				bind:value={searchTerm}
-				on:focus={onFocus}
-				{placeholder}
-				type="text"
-				class="search-block"
-				id="search-input"
-				style="padding-left: {inLeftPad}px;height: {inHeight -
-					hPen}px; right: {inRight}px; width: {inputWidth}px"
-			/>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div id="main-fix" transition:fade={{ duration: 100 }}>
+	<div id="main-head">
+		<TextedLogo pad={headPad} />
+		<SearchResults bind:resultsHidden {searchTerm} />
+		<input bind:value={searchTerm} on:focus={onFocus} {placeholder} type="text" class="search-block"
+			id="search-input" style="padding-left: {inLeftPad}px;height: {inHeight -
+					hPen}px; right: {inRight}px; width: {inputWidth}px" />
 
-			<svg
-				class="search-block"
-				id="search-logo"
-				width={inHeight}
-				height={inHeight}
-				viewBox="-10 -10 60 50"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-				style="right: {inRight + inputWidth + inLeftPad - inHeight}px;"
-			>
-				<SearchLogo />
+		<svg class="search-block" id="search-logo" width={inHeight} height={inHeight} viewBox="-10 -10 60 50"
+			fill="none" xmlns="http://www.w3.org/2000/svg"
+			style="right: {inRight + inputWidth + inLeftPad - inHeight}px;">
+			<SearchLogo />
+		</svg>
+		<div id="head-r" style="width: {headRightWidth}px; padding-right: {headPad}px">
+			{#if isSlim}
+			<svg id="slim-stripes" viewBox="-2 -2 22 22" width={inHeight} height={inHeight - 8}
+				on:click={toggleOpen}>
+				{#each [3, 9, 15] as sp}
+				<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
+				{/each}
 			</svg>
-			<div id="head-r" style="width: {headRightWidth}px; padding-right: {headPad}px">
-				{#if isSlim}
-					<svg
-						id="slim-stripes"
-						viewBox="-2 -2 22 22"
-						width={inHeight}
-						height={inHeight - 8}
-						on:click={toggleOpen}
-					>
-						{#each [3, 9, 15] as sp}
-							<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
-						{/each}
-					</svg>
-					{#if slimOpened}
-						<div id="slim-drop">
-							<a href={`${base}/about`}>About</a>
-							<a href={`${base}/methods`}>Methods</a>
-						</div>
-					{/if}
-				{:else}
-					<a href={`${base}/about`}>About</a>
-					<a href={`${base}/methods`}>Methods</a>
-				{/if}
+			{#if slimOpened}
+			<div id="slim-drop">
+				<a href={`${base}/about`}>About</a>
+				<a href={`${base}/methods`}>Methods</a>
 			</div>
-		</div>
-		<div
-			id="main-content"
-			on:click={() => {
-				slimOpened = false;
-			}}
-		>
-			<slot />
-		</div>
-		<div id="main-foot">
-			<div id="foot-r">{APP_NAME} by CCL @ {year}</div>
+			{/if}
+			{:else}
+			<a href={`${base}/about`}>About</a>
+			<a href={`${base}/methods`}>Methods</a>
+			{/if}
 		</div>
 	</div>
+	<div id="main-content" on:click={()=> {
+		slimOpened = false;
+		}}
+		>
+		<slot />
+	</div>
+	<div id="main-foot">
+		<div id="foot-r">{APP_NAME} by CCL @ {year}</div>
+		<div id="foot-r"><a href={base + '/about#contact' }>Contact</a></div>
+	</div>
+</div>
 {/if}
 
 <style>
@@ -172,10 +150,16 @@
 		color: var(--color-theme-darkgrey);
 	}
 
+	a:hover {
+		color: var(--color-theme-darkblue);
+		font-weight: bold;
+	}
+
 	#main-fix {
-		margin-top: 60px;
+		padding-top: 60px;
 		display: flex;
 		flex-flow: column;
+		box-sizing: border-box;
 		height: 100%;
 	}
 
@@ -197,7 +181,7 @@
 	#main-foot {
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-between;
 		padding-left: 3vw;
 		padding-right: 3vw;
 		padding-top: 15px;
@@ -219,13 +203,8 @@
 		justify-content: end;
 	}
 
-	#head-r > a {
+	#head-r>a {
 		margin-left: 10px;
-	}
-
-	#head-r a:hover {
-		color: var(--color-theme-darkblue);
-		font-weight: bold;
 	}
 
 	#slim-stripes {

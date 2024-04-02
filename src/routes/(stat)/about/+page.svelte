@@ -3,7 +3,9 @@
 	import corvLogo from '$lib/assets/images/icons/corv-logo.png';
 	import udtLogo from '$lib/assets/images/icons/udt-logo.png';
 
-	import euLogo from '$lib/assets/images/icons/ec-logo.png';
+	import euLogo from '$lib/assets/images/icons/eu-logo.png';
+	import eliasLogo from '$lib/assets/images/icons/elias-logo.png';
+	import anitiLogo from '$lib/assets/images/icons/aniti-logo.png';
 
 	import cesarPortrait from '$lib/assets/images/portraits/cesar.jpg';
 	import endrePortrait from '$lib/assets/images/portraits/endre.jpg';
@@ -11,11 +13,11 @@
 	import matePortrait from '$lib/assets/images/portraits/mate.jpg';
 
 	import SankeyVideo from '$lib/components/SankeyVideo.svelte';
-	import { onMount } from 'svelte';
-	import { parse } from 'platform';
+	import {onMount} from 'svelte';
+	import {parse} from 'platform';
 
 	let isWeak = false;
-	let uInfo: { product?: string; name?: string } = {};
+	let uInfo: {product?: string; name?: string} = {};
 
 	onMount(() => {
 		uInfo = parse(navigator.userAgent);
@@ -33,9 +35,9 @@
 			role: 'CCL Director',
 			href: 'https://cesarhidalgo.com/'
 		},
-		{ src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer' },
-		{ src: veraPortrait, name: 'Veronika Hamar', role: 'CCL Budapest Executive Director' },
-		{ src: matePortrait, name: 'Máté Barkóczi', role: 'Designer' }
+		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer'},
+		{src: veraPortrait, name: 'Veronika Hamar', role: 'CCL Budapest Executive Director'},
+		{src: matePortrait, name: 'Máté Barkóczi', role: 'Designer'}
 	];
 
 	let w = 40;
@@ -60,19 +62,18 @@
 <div class="bstrip" id="person-bar">
 	<div class="bar">
 		{#each protraits as port}
-			<div class="person">
-				<img class="portrait" src={port.src} alt={port.name} />
-				<p><a href={port.href}>{port.name}</a></p>
-				<p class="prole">{port.role}</p>
-			</div>
+		<div class="person">
+			<img class="portrait" src={port.src} alt={port.name} />
+			<p><a href={port.href}>{port.name}</a></p>
+			<p class="prole">{port.role}</p>
+		</div>
 		{/each}
 	</div>
 </div>
 <div class="btxt">
 	<p>
-		The group is part of the <a href="https://centerforcollectivelearning.org/"
-			>Center for Collective Learning</a
-		>
+		The group is part of the <a href="https://centerforcollectivelearning.org/">Center for Collective
+			Learning</a>
 		research group. Founded in 2010 by Professor Cesar Hidalgo, the group actively contributes to the
 		development of various areas, including economic complexity, the use of crowdsourcing and computer
 		vision methods to understand the physical qualities of cities, and the creation of digital democracy
@@ -85,17 +86,23 @@
 		including an ERA Chair, the European Lighthouse on Artificial Intelligence for Sustainability
 		(ELIAS), and the ObsSea4Clim (Horizon) Ocean Observatory
 	</p>
-
+	<h1 id="contact">Contact</h1>
 	<p>You can reach us by contacting Veronika directly @ veronika.hamar@uni-corvinus.hu</p>
 </div>
 <div class="bstrip">
 	<iframe title="CCL Launch Video" src="https://www.youtube.com/embed/le75gN3pxPk" />
 </div>
 <div class="bstrip logo-strip">
+	<h1>Created by</h1>
 	{#each uLogos as src}
-		<img class="logo" {src} alt="inst-logo" />
+	<img class="logo" {src} alt="inst-logo" />
 	{/each}
-	<img class="logo" src={euLogo} alt="European Commission Logo" />
+</div>
+<div class="bstrip logo-strip" id="support-strip">
+	<h1>Supported by</h1>
+	<img class="logo" src={euLogo} alt="European Union Logo" />
+	<img class="logo" src={eliasLogo} alt="Elias Logo" />
+	<img class="logo" src={anitiLogo} alt="Aniti Logo" />
 </div>
 
 <style>
@@ -140,6 +147,22 @@
 		background-color: var(--color-theme-lightblue);
 	}
 
+	#support-strip {
+		background-color: var(--color-theme-darkgrey2);
+		padding-bottom: 5px;
+	}
+
+	#support-strip>h1 {
+		color: var(--color-theme-white);
+	}
+
+	.logo-strip>h1 {
+		width: 100%;
+		text-align: center;
+		margin-bottom: 0px;
+		margin-top: 10px;
+	}
+
 	.btxt {
 		font-weight: 400;
 		text-align: justify;
@@ -150,7 +173,7 @@
 		color: var(--color-theme-darkgrey);
 	}
 
-	.btxt > p {
+	.btxt>p {
 		font-weight: 400;
 	}
 
@@ -166,7 +189,7 @@
 		flex-wrap: wrap;
 	}
 
-	.person > p {
+	.person>p {
 		text-align: center;
 	}
 
