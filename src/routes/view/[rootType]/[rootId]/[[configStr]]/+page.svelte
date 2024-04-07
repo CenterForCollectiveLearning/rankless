@@ -23,8 +23,7 @@
 		getLevelVisuals,
 		DEFAULT_CONTROL_SPEC,
 		deriveVisibleTree,
-		getSomePath,
-		treePathToStr
+		getSomePath
 	} from '$lib/tree-functions';
 
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
@@ -33,7 +32,7 @@
 	import BrokenFittedText from '$lib/components/BrokenFittedText.svelte';
 	import { fade } from 'svelte/transition';
 	import { handleStore, mainPreload } from '$lib/tree-loading';
-	import Checkbox from '$lib/components/Checkbox.svelte';
+	import { flipIf } from '$lib/visual-util';
 
 	const COMMS: OMap<(s: string) => void> = {
 		ce: (e) => expandControlLevel(parseInt(e)),
@@ -74,22 +73,25 @@
 		}
 	}
 
-	const defaultChildRate = 0.3;
 	let commLog: string[] = [];
 
-	let innerHeight: number;
-	let innerWidth: number;
+	const defaultChildD1Rate = 0.3;
+
 	let highlightedPath: PathInTree = [];
 	let selectedPath: PathInTree = [];
 	let expandControlInd: number | undefined;
 
-	let svgWidth = 100;
-	let rootWidth = 25;
-	let sideBarWidth = 17;
-	let childHeightRate = defaultChildRate;
-	let overHangRate = 0.05;
+	let svgD2 = 100;
+	let rootD2 = 25;
+	let d2Offset = 19;
+	let sideBarD2 = 17;
+	let childD1Rate = defaultChildD1Rate;
 
-	let topPadRate = 0.03;
+	let innerHeight: number;
+	let innerWidth: number;
+
+	let overHangRate = 0.05;
+	let d1PadRate = 0.03;
 	let headerRate = 0.12;
 	let occupyRate = 0.85;
 
@@ -98,18 +100,55 @@
 	let showHoverInfo = true;
 
 	let hoverHeight = 12.5;
-	let hoverWidth = sideBarWidth * 0.85;
+	let hoverWidth = 40;
 
 	let foreignScales = 0.035;
 
-	$: svgHeight = (innerHeight / innerWidth) * svgWidth - 5; // TODO: bit hacky
-	$: topPadHeight = svgHeight * topPadRate;
-	$: headerHeight = svgHeight * headerRate;
-	$: treeVizHeight = svgHeight * (1 - headerRate) * occupyRate;
+	$: isWideScreen = innerHeight < innerWidth * 1.2;
 
-	let treeWidth = svgWidth - sideBarWidth - 2;
-	let treeXOffset = sideBarWidth + 1;
-	let xOffset = treeWidth * 0.15 + sideBarWidth;
+	function getSizes(isWideScreen: boolean, innerWidth: number, innerHeight: number) {
+		let svgD1;
+
+		if (isWideScreen) {
+			svgD1 = ((innerHeight - 70) / innerWidth) * svgD2;
+		} else {
+			svgD1 = (innerWidth / (innerHeight - 70)) * svgD2;
+		}
+
+		let header = flipIf(
+			{
+				height: svgD1 * headerRate,
+				width: rootD2,
+				x: d2Offset + sideBarD2,
+				y: -svgD1 * headerRate
+			},
+			!isWideScreen
+		);
+
+		let headBar = flipIf(
+			{ x: -svgD2 * 0.5, y: -svgD1 * headerRate, height: svgD1 * headerRate, width: 2 * svgD2 },
+			!isWideScreen
+		);
+
+		let svg = flipIf(
+			{
+				height: svgD1,
+				width: svgD2,
+				x: 0,
+				y: -(headerRate + d1PadRate) * svgD1
+			},
+			!isWideScreen
+		);
+
+		return {
+			svgD1,
+			svg,
+			header,
+			headBar
+		};
+	}
+
+	$: sizes = getSizes(isWideScreen, innerWidth, innerHeight);
 
 	let fullQcSpecs: QcSpecMap = {};
 	let specOptions: SelectionOption[] = [];
@@ -135,7 +174,7 @@
 
 		mainPreload().then(([aLabels, allQcSpecs, baseOptions]) => {
 			fullQcSpecs = Object.fromEntries(
-				Object.entries(allQcSpecs).filter(([k, v]) => v.root_entity_type == $page.params.rootType)
+				Object.entries(allQcSpecs).filter(([_, v]) => v.root_entity_type == $page.params.rootType)
 			);
 			specOptions = Object.entries(fullQcSpecs).map(toSelOpt);
 			selectedQcSpecId = specOptions[0].id;
@@ -178,7 +217,6 @@
 			? { node: getNodeByPath(highlightedPath, visibleTreeInfo.tree), position: hoverLocation }
 			: undefined;
 	}
-
 	function formatFilter(s: string, pcRootId: any) {
 		let regexp = new RegExp('\\{pc_id\\}', 'gi');
 		return s.replace(regexp, pcRootId);
@@ -209,17 +247,21 @@
 		currentQcSpec,
 		specBaselineOptions
 	);
-	$: levelVisuals = getLevelVisuals(visibleTreeInfo, treeVizHeight, expandControlInd);
+	$: levelVisuals = getLevelVisuals(
+		visibleTreeInfo,
+		sizes.svgD1 * (1 - headerRate) * occupyRate,
+		expandControlInd
+	);
 
 	$: highlightedBoxBase = getHighlightedBoxBase(highlightedPath, showHoverInfo, hoverLocation);
 
 	function expandControlLevel(ind: number) {
 		if (ind == expandControlInd) {
 			expandControlInd = undefined;
-			childHeightRate = defaultChildRate;
+			childD1Rate = defaultChildD1Rate;
 		} else {
 			expandControlInd = ind;
-			childHeightRate = 0.5;
+			childD1Rate = 0.5;
 		}
 	}
 
@@ -265,152 +307,92 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<div class="treefix">
-	{#if ![headerHeight, svgWidth, svgHeight].includes(NaN)}
-		<svg
-			viewBox="0 {-headerHeight - topPadHeight} {svgWidth} {svgHeight}"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			<rect
-				fill="grey"
-				fill-opacity={0.3}
-				x={0}
-				y={-headerHeight}
-				height={headerHeight}
-				width={svgWidth}
-			/>
+{#if !Object.values(sizes).includes(NaN)}
+	<svg
+		viewBox="{sizes.svg.x} {sizes.svg.y} {sizes.svg.width} {sizes.svg.height}"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<rect id="header-bg" fill-opacity={0.3} {...sizes.headBar} />
+		<rect id="qc-header" {...sizes.header} />
 
-			<rect id="qc-header" y={-headerHeight} x={xOffset} width={rootWidth} height={headerHeight} />
+		<BrokenFittedText
+			height={sizes.header.height * 0.8}
+			width={sizes.header.width * 0.8}
+			text={selectedQcRootOption?.name || ''}
+			anchor={'middle'}
+			x={sizes.header.x + sizes.header.width / 2}
+			y={sizes.header.y + sizes.header.height * 0.9}
+			allowRotation={false}
+		/>
 
-			{#if false && selectedPath.length > 0}
-				<g style="--x-off: {svgWidth * 0.6}px; --y-off: {-headerHeight * 0.95}px">
-					<filter id="blurry">
-						<feGaussianBlur in="SourceGraphic" stdDeviation={rootWidth * 1.3 * 0.008} />
-					</filter>
-					<foreignObject
-						width={(rootWidth * 1.3) / foreignScales}
-						height={(headerHeight * 0.9) / foreignScales}
-						transform="scale({foreignScales},{foreignScales})"
-					>
-						<PathLevelInfoBox
-							path={selectedPath}
-							weightedRoot={completeTree}
-							{specBaselineOptions}
-							{attributeLabels}
-							qcSpec={currentQcSpec}
-							rootId={selectedQcRootOption?.id}
-						/>
-					</foreignObject>
-					<a
-						href={`${base}/path-profile/${selectedQcSpecId}?r=${
-							selectedQcRootOption.id
-						}&p=${treePathToStr(selectedPath)}`}
-						target="_blank"
-					>
-						<text y={1.8} font-size="1.2px" href="/">Open</text>
-					</a>
-				</g>
-			{/if}
-			<foreignObject
-				y={-headerHeight / foreignScales}
-				width={sideBarWidth / foreignScales}
-				height={500}
-				transform="scale({foreignScales},{foreignScales})"
-			>
-				<div style="padding: 20px">
-					<div id="qc-type-selector">
-						<select bind:value={selectedQcSpecId}>
-							{#each Object.entries(fullQcSpecs) as [qcK, qcE]}
-								<option value={qcK}>
-									{qcE.title}
-								</option>
-							{/each}
-						</select>
-					</div>
-					<div id="hover-check">
-						<span>Infobox on Hover</span>
-						<Checkbox values={[true, false]} labels={['On', 'Off']} bind:value={showHoverInfo} />
-					</div>
-				</div>
-			</foreignObject>
-
-			{#each levelVisuals || [] as lVis, index}
-				<ControlInterface
-					{lVis}
-					{index}
-					{childHeightRate}
-					{overHangRate}
-					{sideBarWidth}
-					{svgWidth}
-					{currentQcSpec}
-					expandedIndex={expandControlInd}
-					{attributeLabels}
-					bind:controlSpecs
-					on:ce={handleControlExpansion}
-				/>
-			{/each}
-
-			<QuercusBranches
-				qcSpec={currentQcSpec}
-				branchReachBack={headerHeight}
-				{xOffset}
-				{rootWidth}
-				{attributeLabels}
-				{visibleTreeInfo}
-				{selectionState}
-				{levelVisuals}
-				{treeWidth}
-				{treeXOffset}
-				{childHeightRate}
+		{#each levelVisuals || [] as lVis, index}
+			<ControlInterface
+				{lVis}
+				{index}
+				{childD1Rate}
 				{overHangRate}
-				childBaseWidth={minimumChildWidth}
-				on:ti={handleInteraction}
+				{sideBarD2}
+				{svgD2}
+				{isWideScreen}
+				{currentQcSpec}
+				expandedIndex={expandControlInd}
+				{attributeLabels}
+				bind:controlSpecs
+				on:ce={handleControlExpansion}
 			/>
+		{/each}
 
-			<BrokenFittedText
-				height={headerHeight - 2}
-				width={rootWidth * 0.8}
-				text={selectedQcRootOption?.name || ''}
-				anchor={'middle'}
-				x={xOffset + rootWidth / 2}
-				y={-1}
-				allowRotation={false}
-			/>
-			{#if highlightedBoxBase != undefined}
-				<g
-					transition:fade={{ duration: 100 }}
-					style="--x-off:{highlightedBoxBase.position.x - hoverWidth}px; --y-off:{highlightedBoxBase
-						.position.y - hoverHeight}px"
+		<QuercusBranches
+			qcSpec={currentQcSpec}
+			branchReachBack={sizes.svgD1 * headerRate}
+			d2Offset={d2Offset + sideBarD2}
+			{rootD2}
+			{attributeLabels}
+			{visibleTreeInfo}
+			{selectionState}
+			{levelVisuals}
+			treeD2={svgD2 - sideBarD2 - 2}
+			treeD2Offset={sideBarD2 + 2}
+			{childD1Rate}
+			{overHangRate}
+			childBaseSize={minimumChildWidth}
+			on:ti={handleInteraction}
+			{isWideScreen}
+		/>
+		{#if highlightedBoxBase != undefined}
+			<g
+				transition:fade={{ duration: 100 }}
+				style="--x-off:{highlightedBoxBase.position.x - hoverWidth}px; --y-off:{highlightedBoxBase
+					.position.y - hoverHeight}px"
+			>
+				<rect
+					id="hover-rect"
+					height={hoverHeight}
+					width={hoverWidth}
+					fill="var(--color-theme-white)"
+					fill-opacity="0.85"
+					stroke="black"
+					stroke-width="0.1px"
+					rx="0.2"
+				/>
+				<foreignObject
+					height={hoverHeight / foreignScales}
+					width={hoverWidth / foreignScales}
+					transform="scale({foreignScales},{foreignScales})"
 				>
-					<rect
-						id="hover-rect"
-						height={hoverHeight}
-						width={hoverWidth}
-						fill="var(--color-theme-white)"
-						fill-opacity="0.85"
-						stroke="black"
-						stroke-width="0.1px"
-						rx="0.2"
+					<PathLevelInfoBox
+						path={highlightedPath}
+						weightedRoot={completeTree}
+						{specBaselineOptions}
+						{attributeLabels}
+						qcSpec={currentQcSpec}
+						rootId={selectedQcRootOption?.id}
 					/>
-					<foreignObject
-						height={hoverHeight / foreignScales}
-						width={hoverWidth / foreignScales}
-						transform="scale({foreignScales},{foreignScales})"
-					>
-						<PathLevelInfoBox
-							path={highlightedPath}
-							weightedRoot={completeTree}
-							{specBaselineOptions}
-							{attributeLabels}
-							qcSpec={currentQcSpec}
-							rootId={selectedQcRootOption?.id}
-						/>
-					</foreignObject>
-				</g>
-			{/if}
-		</svg>
-	{/if}
-</div>
+				</foreignObject>
+			</g>
+		{/if}
+	</svg>
+{/if}
 
 <style>
 	#qc-header {
@@ -421,42 +403,16 @@
 		opacity: 0.5;
 	}
 
-	#qc-type-selector {
-		margin-bottom: 17px;
-		display: flex;
-		justify-content: center;
+	#header-bg {
+		fill: var(--color-theme-darkgrey);
 	}
 
 	#hover-rect {
 		filter: drop-shadow(0.2px 0.2px 0.5px rgb(0 0 0 / 0.7));
 	}
 
-	#hover-check {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-top: 8px;
-	}
-
-	#hover-check > span {
-		margin: 5px;
-	}
-
-	option {
-		font-size: 25px;
-		background-color: var(--color-theme-darkgrey);
-	}
-
-	select {
-		font-size: 25px;
-		width: 90%;
-		height: 45px;
-		border: 2px solid rgba(var(--color-range-50), 0.6);
-		border-radius: 10px;
-		background-color: rgba(var(--color-range-10), 0.6);
-	}
-
-	.treefix {
-		height: 100%;
+	svg {
+		width: 100%;
+		height: 98%;
 	}
 </style>

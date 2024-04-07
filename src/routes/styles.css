@@ -63,6 +63,16 @@ h1 {
 	margin: 0;
 }
 
+a {
+	text-decoration: none;
+	color: var(--color-theme-darkgrey);
+}
+
+a:hover {
+	color: var(--color-theme-darkblue);
+	font-weight: bold;
+}
+
 .bstrip {
 	display: flex;
 	flex-flow: row wrap;

@@ -66,8 +66,6 @@
 	const baseRightWidth = 220;
 	const baseInLeftPad = 60;
 
-	const year = new Date().getFullYear();
-
 	let innerWidth: number;
 
 	let inHeight = 51;
@@ -131,28 +129,18 @@
 			{/if}
 		</div>
 	</div>
-	<div id="main-content" on:click={()=> {
+	<through on:click={()=> {
 		slimOpened = false;
 		}}
 		>
 		<slot />
-	</div>
-	<div id="main-foot">
-		<div id="foot-r">{APP_NAME} by CCL @ {year}</div>
-		<div id="foot-r"><a href={base + '/about#contact' }>Contact</a></div>
-	</div>
+	</through>
 </div>
 {/if}
 
 <style>
-	a {
-		text-decoration: none;
-		color: var(--color-theme-darkgrey);
-	}
-
-	a:hover {
-		color: var(--color-theme-darkblue);
-		font-weight: bold;
+	through {
+		height: 100%;
 	}
 
 	#main-fix {
@@ -172,27 +160,6 @@
 		/* background-color: rgba(var(--color-range-15), 0.55); */
 		background-color: var(--color-theme-yellow);
 		z-index: 10;
-	}
-
-	#main-content {
-		flex: 1 1 auto;
-	}
-
-	#main-foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding-left: 3vw;
-		padding-right: 3vw;
-		padding-top: 15px;
-		padding-bottom: 15px;
-		flex: 0 0 70px;
-		background-color: var(--color-theme-yellow);
-		z-index: 10;
-	}
-
-	#foot-r {
-		color: var(--color-theme-darkgrey);
 	}
 
 	#head-r {

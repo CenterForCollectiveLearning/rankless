@@ -6,7 +6,9 @@
 	import { getDispatch, expandThis } from '$lib/tree-events';
 	import { getTopFzf } from '$lib/search-util';
 	import Checkbox from './Checkbox.svelte';
+	import VerticalCheckbox from './VerticalCheckbox.svelte';
 	import CollapseButton from './CollapseButton.svelte';
+	import { flipIf } from '$lib/visual-util';
 
 	type FilterKey = 'exclude' | 'include';
 	const filterKeys: [FilterKey, FilterKey] = ['exclude', 'include'];
@@ -14,10 +16,11 @@
 	export let lVis: LevelVisElem;
 	export let index: number;
 	export let expandedIndex: number | undefined;
-	export let childHeightRate: number;
+	export let childD1Rate: number;
 	export let overHangRate: number;
-	export let sideBarWidth: number;
-	export let svgWidth: number;
+	export let sideBarD2: number;
+	export let svgD2: number;
+	export let isWideScreen: boolean;
 	export let currentQcSpec: QcSpec;
 	export let controlSpecs: ControlSpec[];
 
@@ -26,7 +29,7 @@
 	export let maxOnOneLevel: number = 15;
 	export let minShow = 1;
 
-	export let controlHtmlWidth = 320;
+	export let controlHtmlD2 = 320;
 
 	const dispatch = getDispatch();
 	let duration = 400;
@@ -34,21 +37,29 @@
 	let sliderHeight = 30;
 	let thumbWidth = 80;
 	let thumbHeight = sliderHeight - 4;
-	$: sliderWidth = controlHtmlWidth - labelWidth * 2;
 
+	$: mainScale = (sideBarD2 * 0.85) / controlHtmlD2;
 	$: isExpanded = index == expandedIndex;
 	$: bif = currentQcSpec?.bifurcations[index];
-	$: topOffset =
-		lVis.topOffset + lVis.totalSize - lVis.totalSize * (childHeightRate + overHangRate);
-	$: fullHeight = lVis.totalSize * childHeightRate;
+	$: levelAttributes = attributeLabels[bif?.attribute_kind] || {};
 
-	$: mainScale = (sideBarWidth * 0.85) / controlHtmlWidth;
+	$: d1Offset = lVis.topOffset + lVis.totalSize - lVis.totalSize * (childD1Rate + overHangRate);
+	$: d1Size = lVis.totalSize * childD1Rate;
+
+	$: blockShape = flipIf({ x: 0, y: d1Offset, height: d1Size, width: sideBarD2 }, !isWideScreen);
+
+	$: barShape = flipIf(
+		{ x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2 },
+		!isWideScreen
+	);
+
+	$: foShape = flipIf({ height: d1Size / mainScale, width: controlHtmlD2 }, !isWideScreen);
+
+	$: sliderWidth = foShape.width || 0 - labelWidth * 2;
 
 	$: svgScaleHeight = sliderHeight * mainScale;
 
-	$: heightInElements = fullHeight / svgScaleHeight;
-
-	$: levelAttributes = attributeLabels[bif?.attribute_kind] || {};
+	$: heightInElements = foShape.height || 0 / svgScaleHeight;
 
 	$: showTopN = heightInElements > 3.2;
 	$: topNClass = showTopN ? '' : 'control-hidden';
@@ -88,32 +99,34 @@
 </script>
 
 {#if bif != undefined}
-	<g transition:fade={{ duration }} style="--y-off: {topOffset}px;">
+	<g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
 		<rect
 			fill="grey"
 			height="1"
-			width={svgWidth}
-			style="transform: matrix(1, 0, 0, {fullHeight}, 0, 0); opacity: {isExpanded ? 0.5 : 0.3}"
+			width="1"
+			style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
+				? 0.5
+				: 0.3}"
 		/>
 		<BrokenFittedText
 			text={currentQcSpec?.bifurcations[index]?.description || ''}
-			width={sideBarWidth * 0.9}
+			width={blockShape.width || 0 * 0.9}
 			height={svgScaleHeight * 2}
-			x={sideBarWidth * 0.1}
+			x={blockShape.width || 0 * 0.1}
 			y={-0.5}
 		/>
 
 		<foreignObject
-			width={controlHtmlWidth}
-			height={fullHeight / mainScale}
+			width={foShape.width}
+			height={foShape.height}
 			style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)"
 		>
 			<div
 				class="main-controls"
-				style="--full-width: {controlHtmlWidth}px; --slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px"
+				style="--full-width: {foShape.width}px; --slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px"
 			>
 				<div class="control-elem">
-					<Checkbox
+					<VerticalCheckbox
 						bind:value={controlSpecs[index].size_base}
 						values={possScaleTypes}
 						width={sliderWidth}
@@ -203,7 +216,7 @@
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<g
-			style="transform: matrix(1,0,0,1,{sideBarWidth * 0.85}, {fullHeight * 0.03})"
+			style="transform: matrix(1,0,0,1,{blockShape.width * 0.85}, {blockShape.height * 0.03})"
 			on:click={expandThis(dispatch, index)}
 		>
 			<CollapseButton size={svgScaleHeight} rotated={isExpanded ? 180 : 0} />

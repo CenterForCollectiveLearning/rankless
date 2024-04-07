@@ -17,7 +17,7 @@ export function deriveVisibleTree(
     specBaselineOptions: SpecBaseOptions
 ): TreeInfo {
 
-    const specCalcFun = (node: WeightedNode, path: PathInTree) => {
+    const specCalcFun = (_: WeightedNode, path: PathInTree) => {
         const entityKind = getEntityKind(path, qcSpec);
         return getSpecMetricObject(root, DEFAULT_SPEC_BASES[entityKind], path, rootId, qcSpec, specBaselineOptions, attributeLabels).specMetric;
     }
@@ -187,13 +187,13 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
 }
 
 
-export function getLevelVisuals(visInfo: TreeInfo, svgHeight: number, expandedControlInd: number | undefined): LevelVisual {
+export function getLevelVisuals(visInfo: TreeInfo, svgD1: number, expandedControlInd: number | undefined): LevelVisual {
     const out = [];
     const levelCount = Math.max(((visInfo?.meta || []).length || 0) - 1, 1);
     let topOffset = 0;
-    const stepSize = (expandedControlInd === undefined) ? svgHeight / levelCount : svgHeight / levelCount / 2;
+    const stepSize = (expandedControlInd === undefined) ? svgD1 / levelCount : svgD1 / levelCount / 2;
     for (let i = 0; i < levelCount; i++) {
-        const totalSize = (expandedControlInd == i) ? svgHeight / 2 + stepSize : stepSize
+        const totalSize = (expandedControlInd == i) ? svgD1 / 2 + stepSize : stepSize
         out.push({ totalSize, topOffset });
         topOffset += totalSize;
     }
