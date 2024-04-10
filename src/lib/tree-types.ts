@@ -52,15 +52,15 @@ export type OffsetInfo = { rank: number; weight: number };
 
 export type InteractionKind = 'toggle-select' | 'highlight' | 'de-highlight';
 type SizeBaseKind = 'volume' | 'specialization';
+type BreakdownBasisKind = 'inst-cited' | 'inst-citing'; //TODO
 
 export type TreeInteractionEvent = { path: PathInTree; action: InteractionKind, topLeftCorner: { x: number, y: number } };
 
-export type IndexEvent = { ind: number };
 
 export type DerivedLevelInfo = { totalWeight: number; totalNodes: number };
 
 export type TreeInfo = { tree: EmbeddedNode; meta: DerivedLevelInfo[] };
-export type ControlSpec = { exclude: string[]; include: string[]; limit_n: number; show_top: boolean; size_base: SizeBaseKind };
+export type ControlSpec = { exclude: string[]; include: string[]; limit_n: number; show_top: boolean; size_base: SizeBaseKind, breakdown_basis: BreakdownBasisKind };
 
 export type LevelVisElem = { totalSize: number; topOffset: number };
 export type LevelVisual = LevelVisElem[];

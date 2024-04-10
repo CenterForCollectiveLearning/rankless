@@ -13,7 +13,6 @@
 		BareNode,
 		ControlSpec,
 		PathInTree,
-		IndexEvent,
 		WeightedNode,
 		OMap,
 		SpecBaseOptions
@@ -75,11 +74,15 @@
 
 	let commLog: string[] = [];
 
-	const defaultChildD1Rate = 0.3;
-
 	let highlightedPath: PathInTree = [];
 	let selectedPath: PathInTree = [];
 	let expandControlInd: number | undefined;
+
+	let innerHeight: number;
+	let innerWidth: number;
+	$: isWideScreen = innerHeight < innerWidth * 1.2;
+
+	let defaultChildD1Rate = 0.3;
 
 	let svgD2 = 100;
 	let rootD2 = 25;
@@ -87,12 +90,9 @@
 	let sideBarD2 = 17;
 	let childD1Rate = defaultChildD1Rate;
 
-	let innerHeight: number;
-	let innerWidth: number;
-
 	let overHangRate = 0.05;
-	let d1PadRate = 0.03;
-	let headerRate = 0.12;
+	$: d1PadRate = isWideScreen ? 0.03 : 0;
+	$: headerRate = isWideScreen ? 0.12 : 0.02;
 	let occupyRate = 0.85;
 
 	let minimumChildWidth = 2.5;
@@ -102,9 +102,7 @@
 	let hoverHeight = 12.5;
 	let hoverWidth = 40;
 
-	let foreignScales = 0.035;
-
-	$: isWideScreen = innerHeight < innerWidth * 1.2;
+	let foreignScales = 0.05;
 
 	function getSizes(isWideScreen: boolean, innerWidth: number, innerHeight: number) {
 		let svgD1;
@@ -125,11 +123,12 @@
 			!isWideScreen
 		);
 
-		let headBar = flipIf(
-			{ x: -svgD2 * 0.5, y: -svgD1 * headerRate, height: svgD1 * headerRate, width: 2 * svgD2 },
-			!isWideScreen
-		);
-
+		let headBar = {
+			x: -svgD2 * 0.5,
+			y: -svgD1 * headerRate,
+			height: svgD1 * headerRate,
+			width: 2 * svgD2
+		};
 		let svg = flipIf(
 			{
 				height: svgD1,
@@ -140,12 +139,7 @@
 			!isWideScreen
 		);
 
-		return {
-			svgD1,
-			svg,
-			header,
-			headBar
-		};
+		return { svgD1, svg, header, headBar };
 	}
 
 	$: sizes = getSizes(isWideScreen, innerWidth, innerHeight);
@@ -162,6 +156,12 @@
 
 	let attributeLabels: AttributeLabels = {};
 
+	let controlSpecs: ControlSpec[] = [DEFAULT_CONTROL_SPEC];
+	let completeTree: WeightedNode = { weight: 1 };
+	let selectionState: BareNode = { children: {} };
+
+	let hoverLocation = { x: 0, y: 0 };
+
 	$: loadNewQc(selectedQcSpecId, selectedQcRootOption?.id);
 
 	const toSelOpt = (entry: [string, QcSpec]) => ({ id: entry[0], name: entry[1].title });
@@ -173,13 +173,17 @@
 		});
 
 		mainPreload().then(([aLabels, allQcSpecs, baseOptions]) => {
-			fullQcSpecs = Object.fromEntries(
-				Object.entries(allQcSpecs).filter(([_, v]) => v.root_entity_type == $page.params.rootType)
-			);
+			Object.entries(allQcSpecs).map(([k, v]) => {
+				if (v.root_entity_type == $page.params.rootType) {
+					fullQcSpecs[k] = v;
+				}
+			});
 			specOptions = Object.entries(fullQcSpecs).map(toSelOpt);
 			selectedQcSpecId = specOptions[0].id;
 
-			attributeLabels = aLabels;
+			if (aLabels != undefined) {
+				attributeLabels = aLabels;
+			}
 			specBaselineOptions = baseOptions;
 
 			runEventSequence($page.url.searchParams.get('e') || '');
@@ -196,11 +200,11 @@
 		if (specId == null || rootId == null) {
 			return;
 		}
-		goto(`${base}/view/${$page.params.rootType}/${rootId}${$page.url.search}`);
+
+		// goto(`${base}/view/${rootId}${$page.url.search}`);
 		handleStore(`qc-builds/${specId}/${rootId}`, (obj: WeightedNode) => {
-			[completeTree, controlSpecs, selectionState, currentQcSpec, controlSpecs] = [
+			[completeTree, selectionState, currentQcSpec, controlSpecs] = [
 				obj,
-				controlSpecs,
 				{ children: {} },
 				fullQcSpecs[selectedQcSpecId],
 				getEmptyLevelSpecs(specId, rootId)
@@ -231,12 +235,6 @@
 		}
 		return out;
 	}
-
-	let controlSpecs: ControlSpec[] = [DEFAULT_CONTROL_SPEC];
-	let completeTree: WeightedNode = { weight: 1 };
-	let selectionState: BareNode = { children: {} };
-
-	let hoverLocation = { x: 0, y: 0 };
 
 	$: visibleTreeInfo = deriveVisibleTree(
 		selectedQcRootOption?.id,
@@ -287,9 +285,6 @@
 		selectionState = selectionState;
 	}
 
-	const handleControlExpansion = (event: CustomEvent<IndexEvent>) =>
-		expandControlLevel(event.detail.ind);
-
 	function handleInteraction(event: CustomEvent<TreeInteractionEvent>) {
 		const path = event.detail.path;
 		const action = event.detail.action;
@@ -307,14 +302,81 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-{#if !Object.values(sizes).includes(NaN)}
-	<svg
-		viewBox="{sizes.svg.x} {sizes.svg.y} {sizes.svg.width} {sizes.svg.height}"
-		xmlns="http://www.w3.org/2000/svg"
-	>
+<svg
+	viewBox="{sizes.svg.x} {sizes.svg.y} {sizes.svg.width} {sizes.svg.height}"
+	xmlns="http://www.w3.org/2000/svg"
+>
+	{#if isWideScreen}
 		<rect id="header-bg" fill-opacity={0.3} {...sizes.headBar} />
-		<rect id="qc-header" {...sizes.header} />
+	{/if}
+	<rect id="qc-header" {...sizes.header} />
 
+	{#each levelVisuals || [] as lVis, index}
+		<ControlInterface
+			{lVis}
+			{index}
+			{childD1Rate}
+			{overHangRate}
+			{sideBarD2}
+			{svgD2}
+			{isWideScreen}
+			{currentQcSpec}
+			bind:expandedIndex={expandControlInd}
+			{attributeLabels}
+			bind:controlSpecs
+		/>
+	{/each}
+
+	<QuercusBranches
+		qcSpec={currentQcSpec}
+		branchReachBack={sizes.svgD1 * headerRate}
+		d2Offset={d2Offset + sideBarD2}
+		{rootD2}
+		{attributeLabels}
+		{visibleTreeInfo}
+		{selectionState}
+		{levelVisuals}
+		treeD2={svgD2 - sideBarD2 - 2}
+		treeD2Offset={sideBarD2 + 2}
+		{childD1Rate}
+		{overHangRate}
+		childBaseSize={minimumChildWidth}
+		on:ti={handleInteraction}
+		{isWideScreen}
+	/>
+	{#if highlightedBoxBase != undefined}
+		<g
+			transition:fade={{ duration: 100 }}
+			style="--x-off:{highlightedBoxBase.position.x - hoverWidth}px; --y-off:{highlightedBoxBase
+				.position.y - hoverHeight}px"
+		>
+			<rect
+				id="hover-rect"
+				height={hoverHeight}
+				width={hoverWidth}
+				fill="var(--color-theme-white)"
+				fill-opacity="0.85"
+				stroke="black"
+				stroke-width="0.1px"
+				rx="0.2"
+			/>
+			<foreignObject
+				height={hoverHeight / foreignScales}
+				width={hoverWidth / foreignScales}
+				transform="scale({foreignScales},{foreignScales})"
+			>
+				<PathLevelInfoBox
+					path={highlightedPath}
+					weightedRoot={completeTree}
+					{specBaselineOptions}
+					{attributeLabels}
+					qcSpec={currentQcSpec}
+					rootId={selectedQcRootOption?.id}
+				/>
+			</foreignObject>
+		</g>
+	{/if}
+	{#if isWideScreen}
 		<BrokenFittedText
 			height={sizes.header.height * 0.8}
 			width={sizes.header.width * 0.8}
@@ -324,75 +386,8 @@
 			y={sizes.header.y + sizes.header.height * 0.9}
 			allowRotation={false}
 		/>
-
-		{#each levelVisuals || [] as lVis, index}
-			<ControlInterface
-				{lVis}
-				{index}
-				{childD1Rate}
-				{overHangRate}
-				{sideBarD2}
-				{svgD2}
-				{isWideScreen}
-				{currentQcSpec}
-				expandedIndex={expandControlInd}
-				{attributeLabels}
-				bind:controlSpecs
-				on:ce={handleControlExpansion}
-			/>
-		{/each}
-
-		<QuercusBranches
-			qcSpec={currentQcSpec}
-			branchReachBack={sizes.svgD1 * headerRate}
-			d2Offset={d2Offset + sideBarD2}
-			{rootD2}
-			{attributeLabels}
-			{visibleTreeInfo}
-			{selectionState}
-			{levelVisuals}
-			treeD2={svgD2 - sideBarD2 - 2}
-			treeD2Offset={sideBarD2 + 2}
-			{childD1Rate}
-			{overHangRate}
-			childBaseSize={minimumChildWidth}
-			on:ti={handleInteraction}
-			{isWideScreen}
-		/>
-		{#if highlightedBoxBase != undefined}
-			<g
-				transition:fade={{ duration: 100 }}
-				style="--x-off:{highlightedBoxBase.position.x - hoverWidth}px; --y-off:{highlightedBoxBase
-					.position.y - hoverHeight}px"
-			>
-				<rect
-					id="hover-rect"
-					height={hoverHeight}
-					width={hoverWidth}
-					fill="var(--color-theme-white)"
-					fill-opacity="0.85"
-					stroke="black"
-					stroke-width="0.1px"
-					rx="0.2"
-				/>
-				<foreignObject
-					height={hoverHeight / foreignScales}
-					width={hoverWidth / foreignScales}
-					transform="scale({foreignScales},{foreignScales})"
-				>
-					<PathLevelInfoBox
-						path={highlightedPath}
-						weightedRoot={completeTree}
-						{specBaselineOptions}
-						{attributeLabels}
-						qcSpec={currentQcSpec}
-						rootId={selectedQcRootOption?.id}
-					/>
-				</foreignObject>
-			</g>
-		{/if}
-	</svg>
-{/if}
+	{/if}
+</svg>
 
 <style>
 	#qc-header {

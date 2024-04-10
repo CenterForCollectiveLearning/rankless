@@ -22,12 +22,13 @@
 
 	function onChange(e: SelectionOption | undefined) {
 		if (e != undefined) {
-			goto(`${base}/view/${INSTITUTION_TYPE}/${e.id}`); //TODO this is capitalized!!
+			let rootType = INSTITUTION_TYPE;
+			goto(`${base}/${rootType}/${e.id}`);
 		}
 	}
 	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 8);
 
-	function key_bind(key) {
+	function key_bind(key: { key: string }) {
 		if (key.key == 'Escape') {
 			resultsHidden = true;
 		}
