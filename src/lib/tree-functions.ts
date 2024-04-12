@@ -1,11 +1,18 @@
-import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, LevelVisual, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions } from './tree-types'
+import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, LevelVisual, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions, BreakdownOptions, SelectedBreakdowns } from './tree-types'
 import { DEFAULT_LIMIT_N } from './constants';
 import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
 
-export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume', breakdown_basis: 'inst-citing' }
+export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume' }
 
 type LevelNodeDescription = { path: PathInTree, node: WeightedNode, derivedWeight: number };
 
+
+export function pruneTree(tree: BareNode, depth: number): BareNode {
+    if (depth == 0) {
+        return { children: {} }
+    }
+    return { children: Object.fromEntries(Object.entries(tree.children || {}).map(([k, v]) => [k, pruneTree(v, depth - 1)])) }
+}
 
 export function deriveVisibleTree(
     rootId: string,
@@ -187,15 +194,19 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
 }
 
 
-export function getLevelVisuals(visInfo: TreeInfo, svgD1: number, expandedControlInd: number | undefined): LevelVisual {
-    const out = [];
+export function getLevelVisuals(visInfo: TreeInfo, svgD1: number, expandedControlInd: number | undefined, breakdownOptions: BreakdownOptions, selectedBreakdowns: SelectedBreakdowns): LevelVisual {
+    const out: LevelVisual = [];
+    if (selectedBreakdowns.length == 0) return out
     const levelCount = Math.max(((visInfo?.meta || []).length || 0) - 1, 1);
+    let currentOptions = breakdownOptions
     let topOffset = 0;
     const stepSize = (expandedControlInd === undefined) ? svgD1 / levelCount : svgD1 / levelCount / 2;
     for (let i = 0; i < levelCount; i++) {
         const totalSize = (expandedControlInd == i) ? svgD1 / 2 + stepSize : stepSize
-        out.push({ totalSize, topOffset });
+        out.push({ totalSize, topOffset, levelOptions: Object.keys(currentOptions || {}) });
         topOffset += totalSize;
+        if (i == levelCount - 1) break;
+        currentOptions = currentOptions[selectedBreakdowns[i]].children
     }
     return out;
 }

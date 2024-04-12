@@ -1,18 +1,25 @@
 <script lang="ts">
-	import {fade} from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
-	import type {QcSpec, LevelVisElem, ControlSpec, AttributeLabels} from '$lib/tree-types';
+	import type {
+		QcSpec,
+		LevelVisElem,
+		ControlSpec,
+		AttributeLabels,
+		SelectedBreakdowns
+	} from '$lib/tree-types';
 	import BrokenFittedText from './BrokenFittedText.svelte';
-	import {getTopFzf} from '$lib/search-util';
+	import { getTopFzf } from '$lib/search-util';
 	import Checkbox from './Checkbox.svelte';
 	import VerticalCheckbox from './VerticalCheckbox.svelte';
 	import CollapseButton from './CollapseButton.svelte';
-	import {flipIf} from '$lib/visual-util';
+	import { flipIf } from '$lib/visual-util';
 
 	type FilterKey = 'exclude' | 'include';
 	const filterKeys: [FilterKey, FilterKey] = ['exclude', 'include'];
 
 	export let lVis: LevelVisElem;
+	export let selectedBreakdowns: SelectedBreakdowns;
 	export let index: number;
 	export let expandedIndex: number | undefined;
 	export let childD1Rate: number;
@@ -44,14 +51,17 @@
 	$: d1Offset = lVis.topOffset + lVis.totalSize - lVis.totalSize * (childD1Rate + overHangRate);
 	$: d1Size = lVis.totalSize * childD1Rate;
 
-	$: blockShape = flipIf({x: 0, y: d1Offset, height: d1Size, width: sideBarD2}, !isWideScreen);
+	$: blockShape = flipIf({ x: 0, y: d1Offset, height: d1Size, width: sideBarD2 }, !isWideScreen);
 
 	$: barShape = flipIf(
-		{x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2},
+		{ x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2 },
 		!isWideScreen
 	);
 
-	$: foShape = flipIf({height: d1Size / mainScale, width: controlHtmlD2}, !isWideScreen);
+	$: foShape = flipIf(
+		{ height: d1Size / mainScale, width: controlHtmlD2, x: 0, y: 0 },
+		!isWideScreen
+	);
 
 	$: sliderWidth = foShape.width || 0 - labelWidth * 2;
 
@@ -61,7 +71,7 @@
 
 	$: showTopN = heightInElements > 3.2;
 	$: topNClass = showTopN ? '' : 'control-hidden';
-	$: showMinOrMaxControl = heightInElements > 4.8;
+	$: showMinOrMaxControl = heightInElements > 40000.8;
 	$: minOrMaxClass = showMinOrMaxControl ? '' : 'control-hidden';
 	$: expandedClass = isExpanded ? '' : 'control-hidden';
 
@@ -97,102 +107,135 @@
 </script>
 
 {#if bif != undefined}
-<g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
-	<rect fill="grey" height="1" width="1" style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
+	<g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
+		<rect
+			fill="grey"
+			height="1"
+			width="1"
+			style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
 				? 0.5
-				: 0.3}" />
-	<BrokenFittedText text={currentQcSpec?.bifurcations[index]?.description || '' } width={blockShape.width || 0 *
-		0.9} height={svgScaleHeight * 2} x={blockShape.width || 0 * 0.1} y={-0.5} />
+				: 0.3}"
+		/>
 
-	<foreignObject width={foShape.width} height={foShape.height}
-		style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)">
-		<div class="main-controls"
-			style="--full-width: {foShape.width}px; --slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px">
-			<div class="control-elem">
-				<VerticalCheckbox bind:value={controlSpecs[index].size_base} values={possScaleTypes}
-					width={sliderWidth} />
-			</div>
-			<div class="control-elem {topNClass}" style="--r: {labelWidth +
-						((sliderWidth - thumbWidth) * (controlSpecs[index].limit_n - minShow)) /
-							(maxOnOneLevel - minShow)}px">
-				{#if showTopN}
-				<div id="topn-control" transition:fade={{ duration }}>
-					<div id="topn-slider">
-						<span>{minShow}</span>
-						<input id="topn-input" type="range" min={minShow} max={maxOnOneLevel}
-							bind:value={controlSpecs[index].limit_n} />
-						<span>{maxOnOneLevel}</span>
-					</div>
-					<label for="topn-input">show {controlSpecs[index].limit_n}</label>
-				</div>
-				{/if}
-			</div>
-
-			<div class="control-elem {minOrMaxClass}">
-				{#if showMinOrMaxControl}
-				<Checkbox bind:value={showSide} values={sideOptions} width={sliderWidth} />
-				{/if}
-			</div>
-
-			<div class="control-elem {expandedClass}">
-				{#if isExpanded}
-				<input type="text" bind:value={incExcFzfTerm} placeholder="include/exclude"
-					class="fzf-input" />
-				{#if editIncludeExclude}
-				<div class="blurred-overlay">
-					<button class="close-button"
-						on:click={disableIncludeExcludeEditable}>&#10006;</button>
-					{#each filterKeys as lKey}
-					{#each controlSpecs[index][lKey] as valInd}
-					<span class="selected-card">{labelFunction(valInd)}
-						<!-- svelte-ignore a11y-no-static-element-interactions -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<span on:click={dropFilterId(valInd, lKey)}
-							class="clear-button">&#10006;</span></span>
-					{/each}
-					{/each}
-				</div>
-				{:else if topFzf.length > 0}
-				<div transition:fade={{ duration: 100 }} class="blurred-overlay">
-					<button class="close-button" on:click={()=> (incExcFzfTerm =
-						'')}>&#10006;</button>
-					<ul>
-						{#each topFzf as fzfResult}
-						<li>
-							{fzfResult.name}
-							<button on:click={addFilterId(fzfResult.id, 'include'
-								)}>include</button>
-							<button on:click={addFilterId(fzfResult.id, 'exclude'
-								)}>exclude</button>
-						</li>
-						{/each}
-					</ul>
-				</div>
-				{/if}
-				<span class="include-exclude-desc">
-					<span>
-						{controlSpecs[index].include.length} included,
-						{controlSpecs[index].exclude.length} excluded
-					</span>
-					<button on:click={makeIncludeExcludeEditable}>edit</button>
-				</span>
-				{/if}
-			</div>
-		</div>
-	</foreignObject>
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<g style="transform: matrix(1,0,0,1,{blockShape.width * 0.85}, {blockShape.height * 0.03})" on:click={()=> {
-		if (isExpanded) {
-		expandedIndex = undefined;
-		} else {
-		expandedIndex = index;
-		}
-		}}
+		<foreignObject
+			width={foShape.width}
+			height={foShape.height}
+			style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)"
 		>
-		<CollapseButton size={svgScaleHeight} rotated={isExpanded ? 180 : 0} />
+			<div
+				class="main-controls"
+				style="--full-width: {foShape.width}px; --slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px"
+			>
+				<div class="control-elem">
+					<VerticalCheckbox
+						bind:value={controlSpecs[index].size_base}
+						values={possScaleTypes}
+						width={sliderWidth}
+					/>
+				</div>
+				<div
+					class="control-elem {topNClass}"
+					style="--r: {labelWidth +
+						((sliderWidth - thumbWidth) * (controlSpecs[index].limit_n - minShow)) /
+							(maxOnOneLevel - minShow)}px"
+				>
+					{#if showTopN}
+						<div id="topn-control" transition:fade={{ duration }}>
+							<div id="topn-slider">
+								<span>{minShow}</span>
+								<input
+									id="topn-input"
+									type="range"
+									min={minShow}
+									max={maxOnOneLevel}
+									bind:value={controlSpecs[index].limit_n}
+								/>
+								<span>{maxOnOneLevel}</span>
+							</div>
+							<label for="topn-input">show {controlSpecs[index].limit_n}</label>
+						</div>
+					{/if}
+				</div>
+
+				<div class="control-elem {minOrMaxClass}">
+					{#if showMinOrMaxControl}
+						<Checkbox bind:value={showSide} values={sideOptions} width={sliderWidth} />
+					{/if}
+					<select bind:value={selectedBreakdowns[index]}>
+						{#each lVis.levelOptions as bd}
+							<option value={bd}>
+								{bd}
+							</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="control-elem {expandedClass}">
+					{#if isExpanded}
+						<input
+							type="text"
+							bind:value={incExcFzfTerm}
+							placeholder="include/exclude"
+							class="fzf-input"
+						/>
+						{#if editIncludeExclude}
+							<div class="blurred-overlay">
+								<button class="close-button" on:click={disableIncludeExcludeEditable}
+									>&#10006;</button
+								>
+								{#each filterKeys as lKey}
+									{#each controlSpecs[index][lKey] as valInd}
+										<span class="selected-card"
+											>{labelFunction(valInd)}
+											<!-- svelte-ignore a11y-no-static-element-interactions -->
+											<!-- svelte-ignore a11y-click-events-have-key-events -->
+											<span on:click={dropFilterId(valInd, lKey)} class="clear-button"
+												>&#10006;</span
+											></span
+										>
+									{/each}
+								{/each}
+							</div>
+						{:else if topFzf.length > 0}
+							<div transition:fade={{ duration: 100 }} class="blurred-overlay">
+								<button class="close-button" on:click={() => (incExcFzfTerm = '')}>&#10006;</button>
+								<ul>
+									{#each topFzf as fzfResult}
+										<li>
+											{fzfResult.name}
+											<button on:click={addFilterId(fzfResult.id, 'include')}>include</button>
+											<button on:click={addFilterId(fzfResult.id, 'exclude')}>exclude</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+						<span class="include-exclude-desc">
+							<span>
+								{controlSpecs[index].include.length} included,
+								{controlSpecs[index].exclude.length} excluded
+							</span>
+							<button on:click={makeIncludeExcludeEditable}>edit</button>
+						</span>
+					{/if}
+				</div>
+			</div>
+		</foreignObject>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<g
+			style="transform: matrix(1,0,0,1,{blockShape.width * 0.85}, {blockShape.height * 0.03})"
+			on:click={() => {
+				if (isExpanded) {
+					expandedIndex = undefined;
+				} else {
+					expandedIndex = index;
+				}
+			}}
+		>
+			<CollapseButton size={svgScaleHeight} rotated={isExpanded ? 180 : 0} />
+		</g>
 	</g>
-</g>
 {/if}
 
 <style>
@@ -208,7 +251,7 @@
 		flex-direction: column;
 	}
 
-	#topn-control>label {
+	#topn-control > label {
 		text-align: center;
 		position: absolute;
 		width: var(--thumb-width);
@@ -233,7 +276,7 @@
 		align-items: center;
 	}
 
-	#topn-slider>span {
+	#topn-slider > span {
 		width: var(--label-width);
 		text-align: center;
 	}

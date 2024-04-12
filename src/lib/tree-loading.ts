@@ -16,23 +16,14 @@ export function mainPreload() {
 
 
     const arResp = handleStore('attribute-statics', (jsv: AttributeLabelsRaw) => {
-        return Object.fromEntries(
-            Object.entries(jsv).map(([eType, eLabels]) => [
-                eType,
-                Object.fromEntries(
-                    Object.entries(eLabels).map(([k, v]) => {
-                        let meta;
-                        try {
-                            meta = JSON.parse(v.meta);
-                        } catch {
-                            meta = {};
-                        }
-
-                        return [k, { ...v, meta }];
-                    })
-                )
-            ])
-        );
+        for (let k of Object.keys(jsv)) {
+            for (let k2 of Object.keys(jsv[k])) {
+                try {
+                    jsv[k][k2].meta = JSON.parse(jsv[k][k2].meta)
+                } catch { }
+            }
+        }
+        return jsv
     });
 
     const qcSpecResp = handleStore('qc-specs', (qcSpecs: QcSpecMap) => {
@@ -51,8 +42,6 @@ export function mainPreload() {
 
         return Promise.all(specEntriyResps).then(Object.fromEntries)
     });
-
-
 
     return Promise.all([
         arResp, qcSpecResp, specResp

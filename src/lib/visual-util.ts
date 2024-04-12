@@ -33,7 +33,7 @@ export function getHorizolntalSankeyPath(cLeft: Point, cRight: Point, sizes: { p
 
 }
 
-export function flipIf(shapeObj: { x?: number, y?: number, height?: number, width?: number }, flipper: boolean) {
+export function flipIf(shapeObj: { x: number, y: number, height: number, width: number }, flipper: boolean) {
     if (flipper) {
         return {
             x: shapeObj.y, y: shapeObj.x, width: shapeObj.height, height: shapeObj.width,

@@ -130,7 +130,7 @@
 				downWardStart
 			);
 		}
-		const textShape = flipIf(
+		let textShape = flipIf(
 			{
 				x: cachedProps.d2Offset + lSize.child * 0.18,
 				y: childrenD1Offset - childD1 * 0.05,
@@ -139,6 +139,10 @@
 			},
 			!isWideScreen
 		);
+		if (!isWideScreen) {
+			textShape.x -= textShape.width;
+			textShape.y += textShape.height;
+		}
 		const hoverShape = flipIf(
 			{
 				x: cachedProps.d2Offset,

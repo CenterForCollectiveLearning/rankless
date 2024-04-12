@@ -27,10 +27,11 @@ export type Bifurcation = {
 
 export type QcSpecMap = OMap<QcSpec>;
 
-type AlGen<T> = OMap<OMap<{ name: string; meta: T }>>;
+type AlGen<T> = { name: string; meta: T };
 
-export type AttributeLabelsRaw = AlGen<string>;
-export type AttributeLabels = AlGen<OMap<number | object>>;
+export type AttributeLabelsRaw = OMap<OMap<AlGen<string>>>;
+export type AttributeLabel = AlGen<OMap<number | object>>;
+export type AttributeLabels = OMap<OMap<AttributeLabel>>;
 
 
 export type BareNode = TreeGen<object>;
@@ -52,7 +53,6 @@ export type OffsetInfo = { rank: number; weight: number };
 
 export type InteractionKind = 'toggle-select' | 'highlight' | 'de-highlight';
 type SizeBaseKind = 'volume' | 'specialization';
-type BreakdownBasisKind = 'inst-cited' | 'inst-citing'; //TODO
 
 export type TreeInteractionEvent = { path: PathInTree; action: InteractionKind, topLeftCorner: { x: number, y: number } };
 
@@ -60,9 +60,11 @@ export type TreeInteractionEvent = { path: PathInTree; action: InteractionKind, 
 export type DerivedLevelInfo = { totalWeight: number; totalNodes: number };
 
 export type TreeInfo = { tree: EmbeddedNode; meta: DerivedLevelInfo[] };
-export type ControlSpec = { exclude: string[]; include: string[]; limit_n: number; show_top: boolean; size_base: SizeBaseKind, breakdown_basis: BreakdownBasisKind };
+export type ControlSpec = { exclude: string[]; include: string[]; limit_n: number; show_top: boolean; size_base: SizeBaseKind };
 
-export type LevelVisElem = { totalSize: number; topOffset: number };
+export type BreakdownOptions = OMap<{ children: BreakdownOptions, qcSpecs: string[] }>;
+export type SelectedBreakdowns = string[];
+export type LevelVisElem = { totalSize: number; topOffset: number, levelOptions: string[] };
 export type LevelVisual = LevelVisElem[];
 
 export type SpecializationBasis = { basis: EntityType | typeof GLOBAL_BASE_TYPE; hierarchy: EntityType | typeof GLOBAL_BASE_TYPE };
