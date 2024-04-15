@@ -8,12 +8,13 @@
 		AttributeLabels,
 		SelectedBreakdowns
 	} from '$lib/tree-types';
-	import BrokenFittedText from './BrokenFittedText.svelte';
 	import { getTopFzf } from '$lib/search-util';
 	import Checkbox from './Checkbox.svelte';
 	import VerticalCheckbox from './VerticalCheckbox.svelte';
-	import CollapseButton from './CollapseButton.svelte';
 	import { flipIf } from '$lib/visual-util';
+	import NumberSlider from './NumberSlider.svelte';
+	import { ALL_TYPES } from '$lib/constants';
+	import CogWheel from './CogWheel.svelte';
 
 	type FilterKey = 'exclude' | 'include';
 	const filterKeys: [FilterKey, FilterKey] = ['exclude', 'include'];
@@ -35,13 +36,18 @@
 	export let maxOnOneLevel: number = 15;
 	export let minShow = 1;
 
-	export let controlHtmlD2 = 320;
+	let controlHtmlD2 = 320;
+
+	function shortenLevel(longName: string) {
+		for (let shortName of ALL_TYPES) {
+			if (longName.includes(shortName)) return shortName;
+		}
+		return 'Level';
+	}
 
 	let duration = 400;
-	let labelWidth = 30;
 	let sliderHeight = 30;
-	let thumbWidth = 80;
-	let thumbHeight = sliderHeight - 4;
+	let labelWidth = 30;
 
 	$: mainScale = (sideBarD2 * 0.85) / controlHtmlD2;
 	$: isExpanded = index == expandedIndex;
@@ -64,13 +70,10 @@
 	);
 
 	$: sliderWidth = foShape.width || 0 - labelWidth * 2;
-
 	$: svgScaleHeight = sliderHeight * mainScale;
-
 	$: heightInElements = foShape.height || 0 / svgScaleHeight;
 
 	$: showTopN = heightInElements > 3.2;
-	$: topNClass = showTopN ? '' : 'control-hidden';
 	$: showMinOrMaxControl = heightInElements > 40000.8;
 	$: minOrMaxClass = showMinOrMaxControl ? '' : 'control-hidden';
 	$: expandedClass = isExpanded ? '' : 'control-hidden';
@@ -106,26 +109,40 @@
 	}
 </script>
 
-{#if bif != undefined}
-	<g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
-		<rect
-			fill="grey"
-			height="1"
-			width="1"
-			style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
-				? 0.5
-				: 0.3}"
-		/>
+<g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
+	<rect
+		fill="grey"
+		height="1"
+		width="1"
+		style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
+			? 0.5
+			: 0.3}"
+	/>
 
-		<foreignObject
-			width={foShape.width}
-			height={foShape.height}
-			style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)"
-		>
-			<div
-				class="main-controls"
-				style="--full-width: {foShape.width}px; --slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px"
-			>
+	<foreignObject
+		width={foShape.width}
+		height={foShape.height}
+		style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)"
+	>
+		<div class="main-controls" style="width: {foShape.width}px">
+			{#if !isExpanded}
+				<div>
+					<div class="sel-base sel-cover {lVis.levelOptions.length > 1 ? 'sel-clicky' : ''}">
+						<span>
+							{shortenLevel(selectedBreakdowns[index] || '')}
+						</span>
+					</div>
+					{#if lVis.levelOptions.length > 1}
+						<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
+							{#each lVis.levelOptions as bd}
+								<option value={bd}>
+									{bd}
+								</option>
+							{/each}
+						</select>
+					{/if}
+				</div>
+			{:else}
 				<div class="control-elem">
 					<VerticalCheckbox
 						bind:value={controlSpecs[index].size_base}
@@ -133,27 +150,15 @@
 						width={sliderWidth}
 					/>
 				</div>
-				<div
-					class="control-elem {topNClass}"
-					style="--r: {labelWidth +
-						((sliderWidth - thumbWidth) * (controlSpecs[index].limit_n - minShow)) /
-							(maxOnOneLevel - minShow)}px"
-				>
+				<div class="control-elem" style="">
 					{#if showTopN}
-						<div id="topn-control" transition:fade={{ duration }}>
-							<div id="topn-slider">
-								<span>{minShow}</span>
-								<input
-									id="topn-input"
-									type="range"
-									min={minShow}
-									max={maxOnOneLevel}
-									bind:value={controlSpecs[index].limit_n}
-								/>
-								<span>{maxOnOneLevel}</span>
-							</div>
-							<label for="topn-input">show {controlSpecs[index].limit_n}</label>
-						</div>
+						<NumberSlider
+							bind:value={controlSpecs[index].limit_n}
+							min={minShow}
+							max={maxOnOneLevel}
+							width={foShape.width}
+							{duration}
+						/>
 					{/if}
 				</div>
 
@@ -161,13 +166,6 @@
 					{#if showMinOrMaxControl}
 						<Checkbox bind:value={showSide} values={sideOptions} width={sliderWidth} />
 					{/if}
-					<select bind:value={selectedBreakdowns[index]}>
-						{#each lVis.levelOptions as bd}
-							<option value={bd}>
-								{bd}
-							</option>
-						{/each}
-					</select>
 				</div>
 
 				<div class="control-elem {expandedClass}">
@@ -219,12 +217,19 @@
 						</span>
 					{/if}
 				</div>
-			</div>
-		</foreignObject>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
+			{/if}
+		</div>
+	</foreignObject>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<g
+		style="transform: matrix(0.03,0,0,0.03,{blockShape.width *
+			(isWideScreen ? 0.9 : 0.5)}, {blockShape.height * (isWideScreen ? 0.5 : 0.95)})"
+	>
 		<g
-			style="transform: matrix(1,0,0,1,{blockShape.width * 0.85}, {blockShape.height * 0.03})"
+			style="transform: scale(0.1) rotate({isExpanded
+				? 0
+				: 120}deg) translate(-256px,-256px) ;cursor: pointer;"
 			on:click={() => {
 				if (isExpanded) {
 					expandedIndex = undefined;
@@ -233,10 +238,11 @@
 				}
 			}}
 		>
-			<CollapseButton size={svgScaleHeight} rotated={isExpanded ? 180 : 0} />
+			<CogWheel />
+			<rect height="512" width="512" opacity="0" />
 		</g>
 	</g>
-{/if}
+</g>
 
 <style>
 	rect,
@@ -244,86 +250,8 @@
 		transition: 0.8s;
 	}
 
-	#topn-control {
-		position: relative;
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	#topn-control > label {
-		text-align: center;
-		position: absolute;
-		width: var(--thumb-width);
-		height: var(--slider-height);
-		left: var(--r);
-		top: 2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1;
-		pointer-events: none;
-		-webkit-user-select: none;
-		/* Safari */
-		-ms-user-select: none;
-		/* IE 10 and IE 11 */
-		user-select: none;
-		/* Standard syntax */
-	}
-
-	#topn-slider {
-		display: flex;
-		align-items: center;
-	}
-
-	#topn-slider > span {
-		width: var(--label-width);
-		text-align: center;
-	}
-
-	input[type='range'] {
-		width: var(--slider-width);
-		height: var(--slider-height);
-		/* border: solid var(--color-theme-darkgrey) 2px; */
-		background-color: var(--color-theme-lightblue);
-		opacity: 0.9;
-		border-radius: var(--slider-height);
-		z-index: 0;
-		outline: none;
-		appearance: none;
-		-webkit-appearance: none;
-		/* Remove default styles on webkit browsers */
-	}
-
-	input[type='range']::-webkit-slider-thumb {
-		width: var(--thumb-width);
-		height: var(--thumb-height);
-		background-color: rgba(var(--color-range-20), 0.6);
-		color: rgba(var(--color-range-20), 0.6);
-		border: 2px solid rgba(var(--color-range-50), 0.6);
-		border-radius: var(--thumb-height);
-		cursor: pointer;
-		position: relative;
-		z-index: 2;
-		appearance: none;
-		-webkit-appearance: none;
-	}
-
-	input[type='range']::-moz-range-thumb {
-		width: var(--thumb-width);
-		height: var(--thumb-height);
-		background-color: rgba(var(--color-range-10), 0.6);
-		color: rgba(var(--color-range-25), 0.6);
-		border: 2px solid rgba(var(--color-range-50), 0.6);
-		border-radius: var(--thumb-height);
-		cursor: pointer;
-		position: relative;
-		z-index: 2;
-	}
-
 	.main-controls {
 		height: 100%;
-		width: var(--full-width);
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
@@ -336,6 +264,35 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+	}
+
+	.sel-base {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		width: 100%;
+		height: 100%;
+	}
+
+	.sel-cover {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	select {
+		cursor: pointer;
+	}
+
+	.sel-clicky > span::after {
+		content: ' \25BD';
+	}
+
+	.sel-clicky > span {
+		border: 2px solid var(--color-theme-blue);
+		padding: 12px;
+		border-radius: 5px;
+		background: var(--color-theme-lightblue);
 	}
 
 	.control-hidden {
@@ -359,7 +316,6 @@
 		border: 2px solid rgba(var(--color-range-55), 0.5) !important;
 		border-radius: 4px !important;
 		width: 100%;
-		font-size: var(--thumb-height) px;
 		padding-top: 5px;
 		padding-bottom: 5px;
 	}
@@ -381,13 +337,6 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-	}
-
-	.sub-input {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		width: var(--slider-width);
 	}
 
 	.selected-card {

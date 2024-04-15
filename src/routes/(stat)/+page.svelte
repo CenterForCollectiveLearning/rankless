@@ -3,7 +3,6 @@
 	import HexagonLogo from '$lib/components/HexagonLogo.svelte';
 	import Flower from '$lib/components/Flower.svelte';
 	import CircleBurst from '$lib/components/CircleBurst.svelte';
-	import ScrollyCGraph from '$lib/components/ScrollyCGraph.svelte';
 	import ScrollySank from '$lib/components/ScrollySank.svelte';
 
 	let scrollYRaw: number;
@@ -44,6 +43,10 @@
 	$: fixedPin = getFixVhFun(sHeight, scrollY);
 	$: rateScale = (srate: number, frate: number) =>
 		Math.max(0, Math.min((scrollY / sHeight - srate) / frate, 1));
+	$: lrMove = (start: number, stay: number) =>
+		isWideScreen
+			? 100 - rateScale(start, 0.4) * 50 + rateScale(start + stay, 0.4) * 50
+			: -94 + rateScale(start, 0.4) * 100 + rateScale(start + stay, 0.4) * 100;
 </script>
 
 <svelte:window bind:scrollY={scrollYRaw} bind:innerHeight bind:outerHeight bind:innerWidth />
@@ -54,45 +57,65 @@
 		In a world where every country dreams of becoming a knowledge powerhouse, we need more than
 		university rankings.
 	</p>
-	<p id="p-2" style="top: {fixedPin(50, 140, 30)}; opacity: {isWideScreen
-			? 100
-			: 100 - rateScale(0.6, 0.22) * 100}%">
-		Universities are a source of <b>cultural and economic growth</b>. They attract talent, educate
-		the population, and help produce important innovations.
+	<p id="p-2" style="top: {fixedPin(70, 110, 30)};">
+		Universities are a source of <span style={scrollY / sHeight> 0.6 ? 'color: var(--color-theme-red);' :
+			''}
+			>cultural and economic growth</span>. They attract talent, educate the population, and help
+		produce important innovations.
 	</p>
-	<p id="p-3" style="top: {fixedPin(isWideScreen ? 245 : 215, 310, 20)};{isWideScreen ? '' : 'width: 80%'}">
+	<p id="p-3" style="top: {isWideScreen ? fixedPin(120, 185, 20) : fixedPin(140, 160, 45)};{isWideScreen
+			? ''
+			: 'width: 80%'}">
 		But the impact of universities cannot be reduced to a single number. <b>Knowledge is highly
 			specific</b>, and so is the impact of universities.
 	</p>
-	<p id="p-4" style="top: {fixedPin(340, 420, 40)};opacity: {100 - rateScale(4.2, 0.2) * 100}%;{isWideScreen
+	<p id="p-4" style="top: {fixedPin(225, 280, 40)};opacity: {100 - rateScale(2.9, 0.2) * 100}%;{isWideScreen
 			? ''
 			: 'width: 75%'}">
-		Universities specialize in <b>fields</b> and build local <b>networks of collaboration</b>.
-		<span id="inner-4" style="opacity: {rateScale(3.4, 0.2) * 100}%">
+		<span style="opacity: {100 - rateScale(2.4, 0.2) * 100}%">
+			Universities specialize in <b>fields</b> and build local
+			<b>networks of collaboration</b>.</span>
+		<span id="inner-4" style="opacity: {rateScale(2.4, 0.2) * 100}%">
 			Isn’t it time we understand them in their right context?
 		</span>
 	</p>
-	<p id="p-5" style="top: {fixedPin(
-			500,
-			isWideScreen ? 650 : 600,
-			isWideScreen ? 40 : 60
-		)}; width: {isWideScreen ? 38 : 82}%">
-		Take the work done by Oregon State University. Instead of looking at them as one element of a
-		list of Universities of varied focuses, sizes and locations, you can visualize how papers
-		relating to <b id="geol">geology</b> or <b id="geog">geography</b>, are citing articles
-		published by authors affiliated with Oregon State around the globe.
+	<p id="p-5" style="top: {fixedPin(330, 400, 45)}; right: {7 -
+			rateScale(3.6, 0.7) * 107}%; width: {isWideScreen ? 38 : 72}%">
+		Take <b class="osu">Oregon State University</b> and the
+		<b class="bologna">University of Bologna</b>. Looking at them as elements of a list of
+		universities with varied focuses, sizes and locations, helps us little in differentiating their
+		impact that is embedded in a complex network of citations.
 	</p>
 
-	<p id="p-6" style="top: {fixedPin(710, 780, 20)};">
+	<p id="p-5-1" class={isWideScreen ? '' : 'bottom-text' } style="top: {isWideScreen
+			? fixedPin(440, 470, 30)
+			: fixedPin(480, 570, 62)}; width: {isWideScreen ? 38 : 82}%; left: {isWideScreen
+			? 50
+			: 6 + rateScale(5.0, 0.4) * 100}%;">
+		We built a tool where you can visualize and explore their impact, and break it down in a way
+		that can tell a story about them, without condensing it to a number, or a range in a ranking.
+	</p>
+	<p id=" p-5-2" class={isWideScreen ? '' : 'bottom-text' }
+		style="top: {fixedPin(500, 750, isWideScreen ? 35 : 61)};left: {lrMove(5.0, 1.3)}%">
+		Stories like how authors affiliated with <b class="osu">Oregon State</b> published a number of
+		successfuld papers cited by authors working on <b id="geol">geology</b>
+		and
+		<b id="geog">geography</b>, working at prestigious institutions around the world
+	</p>
+	<p id="p-5-3" class={isWideScreen ? '' : 'bottom-text' }
+		style="top: {fixedPin(580, 860, isWideScreen ? 35 : 61)};left: {lrMove(6.4, 1.3)}%">
+		How the <b class="bologna">University of Bologna</b> built relationships in Chile or Poland through
+		citations in the field of Mathematics and Physics
+	</p>
+
+	<p id="p-6" style="top: {fixedPin(910, 990, 20)};">
 		Academic impact is a rich kaleidoscope of topics and geographies that can be exciting to
 		explore.
 	</p>
-	<!-- TODO: cut off and make the end somewhat shorter -->
-	<p id="p-7" style="top: {isWideScreen ? 40 : 60}svh;opacity: {rateScale(6.9, 0.2) * 100}%">
+	<p id="p-7" style="top: {isWideScreen ? 40 : 60}svh;opacity: {rateScale(8.9, 0.2) * 100}%">
 		Go ahead and explore impact beyond rankings!
 	</p>
 	<!-- graphs -->
-	<ScrollyCGraph {scrollY} {sHeight} topOffset={fixedPin(120, 160, 8)} {isWideScreen} />
 	<ScrollySank {sWidth} {sHeight} {fixedPin} {rateScale} {isWideScreen} />
 
 	<!-- decoration -->
@@ -121,14 +144,14 @@
 		<CircleBurst />
 	</svg>
 
-	<svg id="final-thin-flower" viewBox="-500 -600 1000 1200" xmlns="http://www.w3.org/2000/svg">
+	<svg id="final-thin-flower" viewBox="-500 -300 1000 1700" xmlns="http://www.w3.org/2000/svg">
 		<Flower paths={thinFlowerPaths} width={3} color="var(--color-theme-blue)" />
 	</svg>
 </div>
 
 <style>
 	#main-container {
-		height: 850svh;
+		height: 1000svh;
 	}
 
 	p {
@@ -156,8 +179,9 @@
 		right: 40px;
 	}
 
-	#p-2>b {
-		color: var(--color-theme-red);
+	#p-2>span {
+		font-weight: 600;
+		transition: color 300ms;
 	}
 
 	#p-3 {
@@ -170,13 +194,9 @@
 	}
 
 	#p-5 {
-		right: 7%;
 		padding: 2vw;
-		font-size: min(3svh, 5vw);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		border: solid var(--color-theme-blue) 2px;
-		border-radius: 10px;
+		font-size: min(3.5svh, 6vw);
+		text-align: right;
 	}
 
 	#p-6 {
@@ -197,7 +217,20 @@
 	}
 
 	#inner-4 {
+		font-weight: 600;
 		color: var(--color-theme-darkblue);
+	}
+
+	.bottom-text {
+		font-size: 2.6svh;
+	}
+
+	.osu {
+		color: rgba(var(--color-range-5), 0.7);
+	}
+
+	.bologna {
+		color: rgba(var(--color-range-55), 0.7);
 	}
 
 	/* decorations */
@@ -297,7 +330,7 @@
 		/* WHY? the height should match main-container height*/
 		width: 100%;
 		left: 0px;
-		top: 755svh;
+		top: 855svh;
 		position: absolute;
 		opacity: 40%;
 	}

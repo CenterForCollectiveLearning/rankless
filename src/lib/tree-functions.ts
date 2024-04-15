@@ -1,5 +1,5 @@
 import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, LevelVisual, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions, BreakdownOptions, SelectedBreakdowns } from './tree-types'
-import { DEFAULT_LIMIT_N } from './constants';
+import { DEFAULT_LIMIT_N, MAX_LEVEL_COUNT } from './constants';
 import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
 
 export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume' }
@@ -59,7 +59,7 @@ export function deriveVisibleTree(
             const lParent = getParent(l);
             const rParent = getParent(r);
             if (lParent?.totalOffsetOnLevel.rank == rParent?.totalOffsetOnLevel.rank) {
-                const order = l.derivedWeight - r.derivedWeight;
+                const order = r.derivedWeight - l.derivedWeight;
                 if (order != 0) return order;
                 return lastE(l.path) > lastE(r.path) ? -1 : 1
             }
@@ -196,17 +196,20 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
 
 export function getLevelVisuals(visInfo: TreeInfo, svgD1: number, expandedControlInd: number | undefined, breakdownOptions: BreakdownOptions, selectedBreakdowns: SelectedBreakdowns): LevelVisual {
     const out: LevelVisual = [];
-    if (selectedBreakdowns.length == 0) return out
-    const levelCount = Math.max(((visInfo?.meta || []).length || 0) - 1, 1);
+    if (selectedBreakdowns.length == 0) return out;
+    let visibleLevelCount = 1;
+    for (let meta of (visInfo?.meta || []).slice(2)) {
+        if (meta.totalNodes > 0) visibleLevelCount++;
+    }
     let currentOptions = breakdownOptions
     let topOffset = 0;
-    const stepSize = (expandedControlInd === undefined) ? svgD1 / levelCount : svgD1 / levelCount / 2;
-    for (let i = 0; i < levelCount; i++) {
+    const stepSize = (expandedControlInd === undefined) ? svgD1 / visibleLevelCount : svgD1 / visibleLevelCount / 2;
+    for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
         const totalSize = (expandedControlInd == i) ? svgD1 / 2 + stepSize : stepSize
-        out.push({ totalSize, topOffset, levelOptions: Object.keys(currentOptions || {}) });
+        out.push({ totalSize, topOffset, levelOptions: Object.keys(currentOptions) });
         topOffset += totalSize;
-        if (i == levelCount - 1) break;
-        currentOptions = currentOptions[selectedBreakdowns[i]].children
+        if (i == (visibleLevelCount - 1)) topOffset += svgD1 / 2;
+        currentOptions = currentOptions[selectedBreakdowns[i]]?.children || {}
     }
     return out;
 }

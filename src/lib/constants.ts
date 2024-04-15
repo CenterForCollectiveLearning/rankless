@@ -24,7 +24,9 @@ export type EntityType =
     typeof PERIOD_TYPE |
     typeof YEAR_TYPE;
 
-export const DEFAULT_LIMIT_N = 10;
+export const ALL_TYPES = [INSTITUTION_KIND_TYPE, INSTITUTION_TYPE, SUBCONCEPT_TYPE, CONCEPT_TYPE, COUNTRY_TYPE, PERIOD_TYPE, YEAR_TYPE, CONCEPT_TYPE];
 
+export const DEFAULT_LIMIT_N = 10;
+export let MAX_LEVEL_COUNT = 4;
 
 //const apiUrl = 'https://borza.ddns.net:8080/v1';

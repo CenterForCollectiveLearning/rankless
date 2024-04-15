@@ -34,6 +34,8 @@
 	import { fade } from 'svelte/transition';
 	import { handleStore, mainPreload } from '$lib/tree-loading';
 	import { flipIf } from '$lib/visual-util';
+	import { MAX_LEVEL_COUNT } from '$lib/constants';
+	import NumberSlider from '$lib/components/NumberSlider.svelte';
 
 	const COMMS: OMap<(s: string) => void> = {
 		//ce: (e) => expandControlLevel(parseInt(e)),
@@ -89,8 +91,9 @@
 	let svgD2 = 100;
 	let rootD2 = 25;
 	let d2Offset = 19;
+	// $: sideBarD2 = expandControlInd == undefined ? 17 : 29;
 	let sideBarD2 = 17;
-	let childD1Rate = defaultChildD1Rate;
+	$: childD1Rate = expandControlInd == undefined ? defaultChildD1Rate : 0.7;
 
 	let overHangRate = 0.05;
 	$: d1PadRate = isWideScreen ? 0.03 : 0;
@@ -98,9 +101,7 @@
 	let occupyRate = 0.85;
 
 	let minimumChildWidth = 2.5;
-
 	let showHoverInfo = true;
-
 	let foreignScales = 0.07;
 
 	function getSizes(isWideScreen: boolean, innerWidth: number, innerHeight: number) {
@@ -142,7 +143,15 @@
 	}
 
 	$: sizes = getSizes(isWideScreen, innerWidth, innerHeight);
-	$: hoverShape = flipIf({ x: 0, y: 0, width: 30, height: sizes.svgD1 * 0.32 }, !isWideScreen);
+	$: hoverShape = flipIf(
+		{
+			x: svgD2 - 35,
+			y: -headerRate * 0.9 * sizes.svgD1,
+			width: 30,
+			height: sizes.svgD1 * 0.32
+		},
+		!isWideScreen
+	);
 
 	let fullQcSpecs: QcSpecMap = {};
 	let currentQcSpec: QcSpec;
@@ -155,12 +164,13 @@
 
 	let attributeLabels: AttributeLabels = {};
 
-	let controlSpecs: ControlSpec[] = [
-		DEFAULT_CONTROL_SPEC,
-		DEFAULT_CONTROL_SPEC,
-		DEFAULT_CONTROL_SPEC,
-		DEFAULT_CONTROL_SPEC
-	];
+	let controlSpecs: ControlSpec[] = Array(MAX_LEVEL_COUNT)
+		.fill(0)
+		.map(() => {
+			return { ...DEFAULT_CONTROL_SPEC };
+		});
+	let maxOnOneLevel = 15;
+	let globalControlShowN = DEFAULT_CONTROL_SPEC.limit_n;
 	let breakdownOptions: BreakdownOptions = {};
 	let selectedBreakdowns: SelectedBreakdowns = [];
 	let completeTree: WeightedNode = { weight: 1 };
@@ -168,6 +178,7 @@
 
 	let rootAttributes: AttributeLabel;
 	$: loadNewQc(selectedBreakdowns, selectedQcRootId, attributeLabels);
+	$: alignToGlobalShown(globalControlShowN);
 
 	onMount(() => {
 		mainPreload().then(([aLabels, allQcSpecs, baseOptions]) => {
@@ -186,11 +197,16 @@
 				}
 			});
 
-			attributeLabels = aLabels || {};
 			specBaselineOptions = baseOptions;
-			//selectedQcSpecId = Object.keys(fullQcSpecs)[2];
-			selectedBreakdowns = Object.values(fullQcSpecs)[2].bifurcations.map((x) => x.description);
-			selectedQcRootId = $page.params.rootId;
+			let defaultQcSpec = Object.values(fullQcSpecs)[2];
+			for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
+				selectedBreakdowns.push(defaultQcSpec.bifurcations[i]?.description || '');
+			}
+			[attributeLabels, selectedBreakdowns, selectedQcRootId] = [
+				aLabels || {},
+				selectedBreakdowns,
+				$page.params.rootId
+			];
 			rootType = $page.params.rootType;
 			runEventSequence($page.url.searchParams.get('e') || '');
 		});
@@ -200,6 +216,12 @@
 		selectedQcRootId = $page.params.rootId;
 		rootType = $page.params.rootType;
 	});
+
+	function alignToGlobalShown(shown: number) {
+		for (let i in controlSpecs) {
+			controlSpecs[i].limit_n = shown;
+		}
+	}
 
 	function loadNewQc(
 		selectedBreakdowns: SelectedBreakdowns,
@@ -220,6 +242,7 @@
 			newSelections.push(selectedBD);
 			// need to figure out what index changed, might get messed up...
 			bdLevel = bdKeys[selectedBD];
+			if (bdLevel === undefined) return;
 			if (bdLevel.qcSpecs.includes(selectedQcSpecId)) {
 				breakdownMatchLevel++;
 			} else {
@@ -235,8 +258,6 @@
 		for (let bif of fullQcSpecs[selectedQcSpecId].bifurcations) {
 			selectedBreakdowns.push(bif.description);
 		}
-
-		console.log('recalculating with ', breakdownMatchLevel);
 
 		//iter breakdown selections, pick qc spec when only one option remains, fill rest of selected breakdowns
 		//find depth upto breakdowns match with last qc
@@ -275,13 +296,10 @@
 		//console.log(commLog.join(';'));
 		const leafId = path[path.length - 1];
 		let parentToChange = getNodeByPath(path.slice(0, path.length - 1), selectionState);
-		console.log('selecting', path, leafId, selectionState);
 		if (parentToChange?.children === undefined) {
 			return;
 		}
 		let isSelected = Object.keys(parentToChange.children).includes(leafId);
-		console.log('isIt?', isSelected, Object.keys(parentToChange.children), leafId);
-
 		if (isSelected) {
 			delete parentToChange.children[leafId];
 			selectedPath = getSomePath(selectionState);
@@ -291,7 +309,6 @@
 				children: parentToChange.children[leafId]?.children || {}
 			};
 		}
-		console.log('selected??', path, selectionState);
 		selectionState = selectionState;
 	}
 
@@ -318,6 +335,15 @@
 	>
 		{#if isWideScreen}
 			<rect id="header-bg" fill-opacity={0.3} {...sizes.headBar} />
+			<foreignObject
+				x="10"
+				y={(-sizes.header.height / 1.25) * (1 / 0.07)}
+				height="200"
+				width="400"
+				style="transform: matrix({0.07}, 0, 0, {0.07}, 0, 0)"
+			>
+				<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} width={320} />
+			</foreignObject>
 		{/if}
 		<rect id="qc-header" {...sizes.header} />
 
@@ -332,6 +358,7 @@
 				{isWideScreen}
 				{currentQcSpec}
 				{attributeLabels}
+				{maxOnOneLevel}
 				bind:expandedIndex={expandControlInd}
 				bind:controlSpecs
 				bind:selectedBreakdowns
@@ -381,6 +408,7 @@
 						weightedRoot={completeTree}
 						{specBaselineOptions}
 						{attributeLabels}
+						{isWideScreen}
 						qcSpec={currentQcSpec}
 						rootId={selectedQcRootId}
 					/>
