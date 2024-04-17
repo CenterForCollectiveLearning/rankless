@@ -10,17 +10,17 @@
 		AttributeLabels,
 		AttributeLabel,
 		BareNode,
+		LevelOutSpec,
 		ControlSpec,
 		PathInTree,
 		WeightedNode,
-		OMap,
 		SpecBaseOptions,
 		BreakdownOptions,
-		SelectedBreakdowns
+		SelectedBreakdowns,
+		TreeInfo
 	} from '$lib/tree-types';
 	import {
 		getNodeByPath,
-		getLevelVisuals,
 		DEFAULT_CONTROL_SPEC,
 		deriveVisibleTree,
 		getSomePath,
@@ -29,54 +29,12 @@
 
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
 	import PathLevelInfoBox from '$lib/components/PathLevelInfoBox.svelte';
-	import ControlInterface from '$lib/components/ControlInterface.svelte';
 	import BrokenFittedText from '$lib/components/BrokenFittedText.svelte';
 	import { fade } from 'svelte/transition';
 	import { handleStore, mainPreload } from '$lib/tree-loading';
-	import { flipIf } from '$lib/visual-util';
 	import { MAX_LEVEL_COUNT } from '$lib/constants';
 	import NumberSlider from '$lib/components/NumberSlider.svelte';
-
-	const COMMS: OMap<(s: string) => void> = {
-		//ce: (e) => expandControlLevel(parseInt(e)),
-		se: (e) => selectNode(e.split('-')),
-		sp: (e) => {
-			const i = parseInt(e);
-			if (i < controlSpecs.length) {
-				controlSpecs[i].size_base = 'specialization';
-			}
-		},
-		qc: (e) => {
-			if (Object.keys(fullQcSpecs).includes(e)) {
-				selectedQcSpecId = e;
-			}
-		},
-		mi: (e) => {
-			const i = parseInt(e.slice(0, 1));
-			if (i < controlSpecs.length) {
-				controlSpecs[i].include = e.slice(1).split(',');
-			}
-		}
-	};
-
-	async function runEventSequence(evSeqString: string) {
-		if (evSeqString.length == 0) return;
-		for (const evDesc of evSeqString.split(';')) {
-			const evKey = evDesc.slice(0, 2);
-			const evParams = evDesc.slice(2);
-			// console.log('parsed comm', evKey, evParams);
-			if (evKey == 'sl') {
-				await new Promise((r) => setTimeout(r, parseFloat(evParams) * 1000));
-			} else {
-				const comm = COMMS[evKey];
-				if (comm != undefined) {
-					comm(evParams);
-				}
-			}
-		}
-	}
-
-	let commLog: string[] = [];
+	import MidpathBar from '$lib/components/MidpathBar.svelte';
 
 	let highlightedPath: PathInTree = [];
 	let selectedPath: PathInTree = [];
@@ -84,74 +42,21 @@
 
 	let innerHeight: number;
 	let innerWidth: number;
-	$: isWideScreen = innerHeight < innerWidth * 1.2;
 
 	let defaultChildD1Rate = 0.3;
 
 	let svgD2 = 100;
 	let rootD2 = 25;
-	let d2Offset = 19;
-	// $: sideBarD2 = expandControlInd == undefined ? 17 : 29;
-	let sideBarD2 = 17;
-	$: childD1Rate = expandControlInd == undefined ? defaultChildD1Rate : 0.7;
+	let d2Offset = 39;
+	let sideBarD2 = 0;
 
+	let d1PadRate = 0.07;
 	let overHangRate = 0.05;
-	$: d1PadRate = isWideScreen ? 0.03 : 0;
-	$: headerRate = isWideScreen ? 0.12 : 0.02;
+	let headerRate = 0.11;
 	let occupyRate = 0.85;
 
 	let minimumChildWidth = 2.5;
 	let showHoverInfo = true;
-	let foreignScales = 0.07;
-
-	function getSizes(isWideScreen: boolean, innerWidth: number, innerHeight: number) {
-		let svgD1;
-
-		if (isWideScreen) {
-			svgD1 = ((innerHeight - 70) / innerWidth) * svgD2;
-		} else {
-			svgD1 = (innerWidth / (innerHeight - 70)) * svgD2;
-		}
-
-		let header = flipIf(
-			{
-				height: svgD1 * headerRate,
-				width: rootD2,
-				x: d2Offset + sideBarD2,
-				y: -svgD1 * headerRate
-			},
-			!isWideScreen
-		);
-
-		let headBar = {
-			x: -svgD2 * 0.5,
-			y: -svgD1 * headerRate,
-			height: svgD1 * headerRate,
-			width: 2 * svgD2
-		};
-		let svg = flipIf(
-			{
-				height: svgD1,
-				width: svgD2,
-				x: 0,
-				y: -(headerRate + d1PadRate) * svgD1
-			},
-			!isWideScreen
-		);
-
-		return { svgD1, svg, header, headBar };
-	}
-
-	$: sizes = getSizes(isWideScreen, innerWidth, innerHeight);
-	$: hoverShape = flipIf(
-		{
-			x: svgD2 - 35,
-			y: -headerRate * 0.9 * sizes.svgD1,
-			width: 30,
-			height: sizes.svgD1 * 0.32
-		},
-		!isWideScreen
-	);
 
 	let fullQcSpecs: QcSpecMap = {};
 	let currentQcSpec: QcSpec;
@@ -164,6 +69,16 @@
 
 	let attributeLabels: AttributeLabels = {};
 
+	let levelOutSpecs: LevelOutSpec[] = Array(MAX_LEVEL_COUNT)
+		.fill(0)
+		.map(() => {
+			return {
+				totalSize: 0,
+				topOffset: 0,
+				levelOptions: [],
+				isVisible: false
+			};
+		});
 	let controlSpecs: ControlSpec[] = Array(MAX_LEVEL_COUNT)
 		.fill(0)
 		.map(() => {
@@ -177,28 +92,76 @@
 	let selectionState: BareNode = { children: {} };
 
 	let rootAttributes: AttributeLabel;
+
+	$: childD1Rate = expandControlInd == undefined ? defaultChildD1Rate : 0.7;
+	$: svgD1 = (innerHeight / innerWidth) * svgD2;
+	$: d1ToPixels = (d1: number) => (d1 * innerHeight) / svgD1;
+	$: d2ToPixels = (d2: number) => (d2 * innerWidth) / svgD2;
+	$: dBasedStyle = getStyleMaker(d1ToPixels, d2ToPixels);
+	$: d1PadSize = d1PadRate * svgD1;
+
+	$: headerShape = {
+		height: svgD1 * headerRate,
+		width: rootD2,
+		x: d2Offset + sideBarD2,
+		y: -svgD1 * headerRate
+	};
+	$: headBarShape = {
+		x: -svgD2 * 0.5,
+		y: -svgD1 * headerRate,
+		height: svgD1 * headerRate,
+		width: 2 * svgD2
+	};
+	$: svgShape = {
+		height: svgD1,
+		width: svgD2,
+		x: 0,
+		y: -(headerRate + d1PadRate) * svgD1
+	};
+
 	$: loadNewQc(selectedBreakdowns, selectedQcRootId, attributeLabels);
 	$: alignToGlobalShown(globalControlShowN);
 
+	$: visibleTreeInfo = deriveVisibleTree(
+		selectedQcRootId,
+		completeTree,
+		controlSpecs,
+		selectionState,
+		attributeLabels,
+		currentQcSpec,
+		specBaselineOptions
+	);
+
+	$: updateLevelSpecs(
+		visibleTreeInfo,
+		svgD1 * (1 - headerRate) * occupyRate,
+		expandControlInd,
+		breakdownOptions,
+		selectedBreakdowns
+	);
+
 	onMount(() => {
 		mainPreload().then(([aLabels, allQcSpecs, baseOptions]) => {
+			let _OPTS = [{}, {}, {}, {}, {}];
 			Object.entries(allQcSpecs || {}).map(([k, v]) => {
 				if (v.root_entity_type == $page.params.rootType) {
 					fullQcSpecs[k] = v;
 					let boObj = breakdownOptions;
-					for (let bif of v.bifurcations) {
+					for (let [i, bif] of v.bifurcations.entries()) {
 						const bDef = bif.description;
 						if (!(bDef in boObj)) {
 							boObj[bDef] = { children: {}, qcSpecs: [] };
 						}
 						boObj[bDef].qcSpecs.push(k);
 						boObj = boObj[bDef].children;
+						_OPTS[i][bDef] = '';
 					}
 				}
 			});
+			console.log(_OPTS);
 
 			specBaselineOptions = baseOptions;
-			let defaultQcSpec = Object.values(fullQcSpecs)[2];
+			let defaultQcSpec = Object.values(fullQcSpecs)[5];
 			for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
 				selectedBreakdowns.push(defaultQcSpec.bifurcations[i]?.description || '');
 			}
@@ -208,7 +171,6 @@
 				$page.params.rootId
 			];
 			rootType = $page.params.rootType;
-			runEventSequence($page.url.searchParams.get('e') || '');
 		});
 	});
 
@@ -250,7 +212,7 @@
 			}
 			bdKeys = bdLevel.children;
 		}
-		selectedQcSpecId = bdLevel?.qcSpecs[0];
+		selectedQcSpecId = bdLevel?.qcSpecs[0] || '';
 
 		while (selectedBreakdowns.length > 0) {
 			selectedBreakdowns.pop();
@@ -273,26 +235,34 @@
 			];
 		});
 	}
-
-	$: visibleTreeInfo = deriveVisibleTree(
-		selectedQcRootId,
-		completeTree,
-		controlSpecs,
-		selectionState,
-		attributeLabels,
-		currentQcSpec,
-		specBaselineOptions
-	);
-	$: levelVisuals = getLevelVisuals(
-		visibleTreeInfo,
-		sizes.svgD1 * (1 - headerRate) * occupyRate,
-		expandControlInd,
-		breakdownOptions,
-		selectedBreakdowns
-	);
+	function updateLevelSpecs(
+		tree: TreeInfo,
+		svgD1: number,
+		expandedControlInd: number | undefined,
+		breakdownOptions: BreakdownOptions,
+		selectedBreakdowns: SelectedBreakdowns
+	) {
+		if (selectedBreakdowns.length == 0) return;
+		let visibleLevelCount = 1;
+		for (let meta of (tree.meta || []).slice(2)) {
+			if (meta.totalNodes > 0) visibleLevelCount++;
+		}
+		let currentOptions = breakdownOptions;
+		let topOffset = 0;
+		const stepSize =
+			expandedControlInd === undefined ? svgD1 / visibleLevelCount : svgD1 / visibleLevelCount / 2;
+		for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
+			levelOutSpecs[i].totalSize = expandedControlInd == i ? svgD1 / 2 + stepSize : stepSize;
+			levelOutSpecs[i].topOffset = topOffset;
+			levelOutSpecs[i].levelOptions = Object.keys(currentOptions);
+			levelOutSpecs[i].isVisible = i < visibleLevelCount;
+			topOffset += levelOutSpecs[i].totalSize;
+			if (i == visibleLevelCount - 1) topOffset += svgD1 / 2;
+			currentOptions = currentOptions[selectedBreakdowns[i]]?.children || {};
+		}
+	}
 
 	function selectNode(path: PathInTree) {
-		commLog.push(`se${path.join('-')}`);
 		//console.log(commLog.join(';'));
 		const leafId = path[path.length - 1];
 		let parentToChange = getNodeByPath(path.slice(0, path.length - 1), selectionState);
@@ -325,108 +295,105 @@
 		}
 		selectNode(path);
 	}
+
+	function getStyleMaker(d1Parser: (n: number) => number, d2Parser: (n: number) => number) {
+		return (d1Obj: object, d2Obj: object) => {
+			return [
+				[d1Obj || {}, d1Parser],
+				[d2Obj || {}, d2Parser]
+			]
+				.map(([dObj, dParser]) =>
+					Object.entries(dObj)
+						.map(([k, v]) => `${k}: ${dParser(v)}px;`)
+						.join('')
+				)
+				.join('');
+		};
+	}
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
-{#if innerHeight != undefined && innerHeight != undefined}
+{#if !Object.values(svgShape).includes(NaN) && !Object.values(svgShape).includes(undefined)}
 	<svg
-		viewBox="{sizes.svg.x} {sizes.svg.y} {sizes.svg.width} {sizes.svg.height}"
+		viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}"
 		xmlns="http://www.w3.org/2000/svg"
 	>
-		{#if isWideScreen}
-			<rect id="header-bg" fill-opacity={0.3} {...sizes.headBar} />
-			<foreignObject
-				x="10"
-				y={(-sizes.header.height / 1.25) * (1 / 0.07)}
-				height="200"
-				width="400"
-				style="transform: matrix({0.07}, 0, 0, {0.07}, 0, 0)"
-			>
-				<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} width={320} />
-			</foreignObject>
-		{/if}
-		<rect id="qc-header" {...sizes.header} />
-
-		{#each levelVisuals || [] as lVis, index}
-			<ControlInterface
-				{lVis}
-				{index}
-				{childD1Rate}
-				{overHangRate}
-				{sideBarD2}
-				{svgD2}
-				{isWideScreen}
-				{currentQcSpec}
-				{attributeLabels}
-				{maxOnOneLevel}
-				bind:expandedIndex={expandControlInd}
-				bind:controlSpecs
-				bind:selectedBreakdowns
-			/>
-		{/each}
+		<rect id="header-bg" fill-opacity={0.3} {...headBarShape} />
 
 		<QuercusBranches
 			qcSpec={currentQcSpec}
-			branchReachBack={sizes.svgD1 * headerRate}
+			branchReachBack={svgD1 * headerRate}
 			d2Offset={d2Offset + sideBarD2}
 			{rootD2}
 			{attributeLabels}
 			{visibleTreeInfo}
 			{selectionState}
-			{levelVisuals}
-			treeD2={svgD2 - sideBarD2 - 2}
-			treeD2Offset={sideBarD2 + 2}
+			{levelOutSpecs}
+			treeD2={svgD2 - sideBarD2}
+			treeD2Offset={sideBarD2}
 			{childD1Rate}
 			{overHangRate}
 			childBaseSize={minimumChildWidth}
 			on:ti={handleInteraction}
-			{isWideScreen}
 		/>
-		{#if showHoverInfo && highlightedPath.length > 0}
-			<g
-				transition:fade={{ duration: 100 }}
-				style="--x-off:{hoverShape.x}px; --y-off:{hoverShape.y}px"
-				id="hover-g"
-			>
-				<rect
-					id="hover-rect"
-					height={hoverShape.height}
-					width={hoverShape.width}
-					fill="var(--color-theme-white)"
-					fill-opacity="0.85"
-					stroke="black"
-					stroke-width="0.1px"
-					rx="0.2"
-				/>
-				<foreignObject
-					height={hoverShape.height / foreignScales}
-					width={hoverShape.width / foreignScales}
-					transform="scale({foreignScales},{foreignScales})"
-				>
-					<PathLevelInfoBox
-						path={highlightedPath}
-						weightedRoot={completeTree}
-						{specBaselineOptions}
-						{attributeLabels}
-						{isWideScreen}
-						qcSpec={currentQcSpec}
-						rootId={selectedQcRootId}
-					/>
-				</foreignObject>
-			</g>
-		{/if}
-		{#if isWideScreen}
-			<BrokenFittedText
-				height={sizes.header.height * 0.8}
-				width={sizes.header.width * 0.8}
-				text={rootAttributes?.name || ''}
-				anchor={'middle'}
-				x={sizes.header.x + sizes.header.width / 2}
-				y={sizes.header.y + sizes.header.height * 0.9}
-				allowRotation={false}
-			/>
-		{/if}
+		<rect id="qc-header" {...headerShape} />
+
+		<BrokenFittedText
+			height={headerShape.height * 0.8}
+			width={headerShape.width * 0.8}
+			text={rootAttributes?.name || ''}
+			anchor={'middle'}
+			bottomAligned={false}
+			x={headerShape.x + headerShape.width / 2}
+			y={headerShape.y + headerShape.height * 0.9}
+			allowRotation={false}
+		/>
 	</svg>
+
+	<div
+		class="floater head-sentence"
+		style="top: 0px;{dBasedStyle({ left: 20, width: 60 }, { height: d1PadSize })}"
+	>
+		<p>Papers authored by scholars at</p>
+	</div>
+
+	<div
+		class="floater"
+		style={dBasedStyle({ top: d1PadSize + headerShape.height * 0.4 }, { left: 3 })}
+	>
+		<NumberSlider
+			bind:value={globalControlShowN}
+			min={1}
+			max={maxOnOneLevel}
+			width={d1ToPixels(d2Offset) * 0.6}
+			sliderHeight={d1ToPixels(headerShape.height * 0.2)}
+		/>
+	</div>
+	{#each levelOutSpecs || [] as levelSpec, index}
+		<MidpathBar
+			{index}
+			{levelSpec}
+			bind:selectedBreakdowns
+			totalD1Offset={headerShape.height + d1PadSize}
+			{dBasedStyle}
+		/>
+	{/each}
+	{#if showHoverInfo && highlightedPath.length > 0}
+		<div
+			transition:fade={{ duration: 200 }}
+			id="hover-info"
+			style={dBasedStyle({ top: d1PadSize }, { right: 2, width: 30 })}
+		>
+			<PathLevelInfoBox
+				path={highlightedPath}
+				weightedRoot={completeTree}
+				{specBaselineOptions}
+				{attributeLabels}
+				qcSpec={currentQcSpec}
+				rootId={selectedQcRootId}
+			/>
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -442,16 +409,35 @@
 		fill: var(--color-theme-darkgrey);
 	}
 
-	#hover-rect {
+	#hover-info {
+		position: fixed;
+		transition: all 500ms;
+		background-color: var(--color-theme-white);
+		border: solid 2px var(--color-theme-darkgrey);
+		border-radius: 10px;
 		filter: drop-shadow(0.2px 0.2px 0.5px rgb(0 0 0 / 0.7));
-	}
-
-	#hover-g {
 		pointer-events: none;
 	}
 
+	.head-sentence {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.head-sentence > p {
+		font-size: 1.8rem;
+	}
+
+	.floater {
+		position: fixed;
+	}
+
 	svg {
+		position: fixed;
+		top: 0px;
+		left: 0px;
 		width: 100%;
-		height: 98%;
+		height: 100%;
 	}
 </style>

@@ -64,8 +64,8 @@ export type ControlSpec = { exclude: string[]; include: string[]; limit_n: numbe
 
 export type BreakdownOptions = OMap<{ children: BreakdownOptions, qcSpecs: string[] }>;
 export type SelectedBreakdowns = string[];
-export type LevelVisElem = { totalSize: number; topOffset: number, levelOptions: string[] };
-export type LevelVisual = LevelVisElem[];
+export type LevelOutSpec = { totalSize: number; topOffset: number, isVisible: boolean, levelOptions: string[] };
+
 
 export type SpecializationBasis = { basis: EntityType | typeof GLOBAL_BASE_TYPE; hierarchy: EntityType | typeof GLOBAL_BASE_TYPE };
 export type SomeSpecBaselineMap = OMap<OMap<OMap<number> | number> | number>;

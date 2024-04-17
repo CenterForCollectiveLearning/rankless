@@ -7,14 +7,14 @@
 		SpecBaseOptions,
 		WeightedNode
 	} from '$lib/tree-types';
-	import {formatNumber} from '$lib/text-format-util';
-	import {getNodeByPath, getChildName, getEntityKind} from '$lib/tree-functions';
+	import { formatNumber } from '$lib/text-format-util';
+	import { getNodeByPath, getChildName, getEntityKind } from '$lib/tree-functions';
 	import {
 		DEFAULT_SPEC_BASES,
 		getSpecMetricObject,
 		specBaseStrToKind
 	} from '$lib/metric-calculation';
-	import type {EntityType} from '$lib/constants';
+	import type { EntityType } from '$lib/constants';
 
 	export let rootId: string;
 	export let path: PathInTree;
@@ -23,7 +23,6 @@
 	export let weightedRoot: WeightedNode;
 	export let specBaselineOptions: SpecBaseOptions;
 
-	export let isWideScreen: boolean;
 	export let levelOfDetail = 0;
 
 	const CONCEPT_DESC_FRAME = 'Where the original paper was categorized as';
@@ -35,8 +34,11 @@
 		Country: REGION_DESC_FRAME,
 		Continent: REGION_DESC_FRAME,
 		Institution: INST_DESC_FRAME,
+		InstitutionType: '',
 		Concept: CONCEPT_DESC_FRAME,
-		SubConcept: CONCEPT_DESC_FRAME
+		SubConcept: CONCEPT_DESC_FRAME,
+		Period: '',
+		Year: ''
 	};
 
 	$: leafEntityKind = getEntityKind(path, qcSpec);
@@ -46,13 +48,13 @@
 			return [];
 		}
 		const nodes = [
-			{...weightedRoot, name: attributeLabels[qcSpec.root_entity_type][rootId].name}
+			{ ...weightedRoot, name: attributeLabels[qcSpec.root_entity_type][rootId].name }
 		];
 		for (let i = 0; i < path.length; i++) {
 			const parentPath = path.slice(0, i + 1);
 			const pNode = getNodeByPath(parentPath, weightedRoot);
 			const name = getChildName(parentPath, attributeLabels, qcSpec);
-			nodes.push({...(pNode || {weight: 0}), name});
+			nodes.push({ ...(pNode || { weight: 0 }), name });
 		}
 		return nodes;
 	}
@@ -96,7 +98,7 @@
 			if (i == path.length - 1 || currBif.resolver_id != nextBif.resolver_id) {
 				const entityType = currBif.attribute_kind;
 				const entityName = getChildName(path.slice(0, i + 1), attributeLabels, qcSpec);
-				out.push({entityType, prefixStr: DESC_PREFIXES[entityType], entityName});
+				out.push({ entityType, prefixStr: DESC_PREFIXES[entityType], entityName });
 			}
 		}
 		return out;
@@ -106,7 +108,7 @@
 		const num = leaf?.weight || 0;
 		const comparison = (parent?.weight || 0) / Object.keys(parent?.children || {}).length;
 		const rate = num / comparison;
-		return {num, comparison, rate, desc: getDesc(rate)};
+		return { num, comparison, rate, desc: getDesc(rate) };
 	}
 
 	function getDesc(rate: number) {
@@ -148,71 +150,71 @@
 </script>
 
 {#if path != undefined}
-<div class="box-container">
-	<div id="title-row">
-		{#if levelOfDetail == 0}
-		<h2>{leaf.name}</h2>
-		<h3>
-			{formatNumber(volumeInfo.num)} citation{#if volumeInfo.num > 1}s{/if}
-		</h3>
-		<h3>{getDesc(specInfo.specMetric)} Specialization</h3>
-		<p>
-			<b>{(specInfo.nodeRate * 100).toFixed(2)}%</b> of total impact
-		</p>
-		{:else}
-		<h2>Papers published by {attributeLabels[qcSpec.root_entity_type][rootId].name}</h2>
-		{#each trueFilters as trueFilter}
-		<div class="title-elem">
-			<h2>{trueFilter.prefixStr} {trueFilter.entityName}</h2>
+	<div class="box-container">
+		<div id="title-row">
+			{#if levelOfDetail == 0}
+				<h2>{leaf.name}</h2>
+				<h3>
+					{formatNumber(volumeInfo.num)} citation{#if volumeInfo.num > 1}s{/if}
+				</h3>
+				<h3>{getDesc(specInfo.specMetric)} Specialization</h3>
+				<p>
+					<b>{(specInfo.nodeRate * 100).toFixed(2)}%</b> of total impact
+				</p>
+			{:else}
+				<h2>Papers published by {attributeLabels[qcSpec.root_entity_type][rootId].name}</h2>
+				{#each trueFilters as trueFilter}
+					<div class="title-elem">
+						<h2>{trueFilter.prefixStr} {trueFilter.entityName}</h2>
+					</div>
+				{/each}
+			{/if}
 		</div>
-		{/each}
+		{#if levelOfDetail > 0}
+			<div class="detail-cols">
+				<div id="volume-col">
+					<h3>
+						{formatNumber(volumeInfo.num)} citation{#if volumeInfo.num > 1}s{/if}
+					</h3>
+					<p>
+						<b>{(volumeInfo.num / volumeInfo.comparison).toFixed(2)}</b> times the average
+						{levelEntityType}
+						({formatNumber(volumeInfo.comparison)}) under {parent.name}
+					</p>
+				</div>
+				<div id="spec-col">
+					<h3>{getDesc(specInfo.specMetric)} Specialization</h3>
+					<p>
+						<b>{(specInfo.nodeRate * 100).toFixed(2)}%</b> of total impact
+					</p>
+					<p>
+						{(specInfo.baselineRate * 100).toFixed(2)}% ({formatNumber(
+							specInfo.nodeDivisor * specInfo.baselineRate
+						)} citations) expected based on {leaf.name} impact rate of all
+						{qcSpec.root_entity_type}s
+					</p>
+				</div>
+
+				<div>
+					<h3>Specialization Details</h3>
+					{#each specMetrics as { baseKind, specMetricObj }}
+						<p>
+							Based on the impact rate of {#if baseKind.basis == 'Global'}
+								all other Institutions
+							{:else}
+								Institutions in the same {baseKind.basis}
+							{/if}
+							{#if baseKind.hierarchy != 'Global'}
+								when citing papers belong to the same {baseKind.hierarchy}
+							{/if} we expect {formatNumber(specMetricObj.nodeDivisor * specMetricObj.baselineRate)}
+							citations, the true number is <b>{(specMetricObj.specMetric * 100).toFixed(2)}%</b>
+							of this
+						</p>
+					{/each}
+				</div>
+			</div>
 		{/if}
 	</div>
-	{#if levelOfDetail > 0}
-	<div class="detail-cols">
-		<div id="volume-col">
-			<h3>
-				{formatNumber(volumeInfo.num)} citation{#if volumeInfo.num > 1}s{/if}
-			</h3>
-			<p>
-				<b>{(volumeInfo.num / volumeInfo.comparison).toFixed(2)}</b> times the average
-				{levelEntityType}
-				({formatNumber(volumeInfo.comparison)}) under {parent.name}
-			</p>
-		</div>
-		<div id="spec-col">
-			<h3>{getDesc(specInfo.specMetric)} Specialization</h3>
-			<p>
-				<b>{(specInfo.nodeRate * 100).toFixed(2)}%</b> of total impact
-			</p>
-			<p>
-				{(specInfo.baselineRate * 100).toFixed(2)}% ({formatNumber(
-				specInfo.nodeDivisor * specInfo.baselineRate
-				)} citations) expected based on {leaf.name} impact rate of all
-				{qcSpec.root_entity_type}s
-			</p>
-		</div>
-
-		<div>
-			<h3>Specialization Details</h3>
-			{#each specMetrics as { baseKind, specMetricObj }}
-			<p>
-				Based on the impact rate of {#if baseKind.basis == 'Global'}
-				all other Institutions
-				{:else}
-				Institutions in the same {baseKind.basis}
-				{/if}
-				{#if baseKind.hierarchy != 'Global'}
-				when citing papers belong to the same {baseKind.hierarchy}
-				{/if} we expect {formatNumber(specMetricObj.nodeDivisor * specMetricObj.baselineRate)}
-				citations, the true number is <b>{(specMetricObj.specMetric * 100).toFixed(2)}%</b>
-				of this
-			</p>
-			{/each}
-		</div>
-	</div>
-	{/if}
-</div>
 {/if}
 
 <style>
@@ -240,7 +242,7 @@
 		justify-content: space-around;
 	}
 
-	#title-row>h3,
+	#title-row > h3,
 	p {
 		padding-left: 20px;
 	}
@@ -255,7 +257,7 @@
 		justify-content: space-evenly;
 	}
 
-	.detail-cols>div {
+	.detail-cols > div {
 		padding: 20px;
 		text-align: center;
 	}

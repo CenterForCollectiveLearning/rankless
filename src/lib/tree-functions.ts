@@ -1,5 +1,5 @@
-import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, LevelVisual, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions, BreakdownOptions, SelectedBreakdowns } from './tree-types'
-import { DEFAULT_LIMIT_N, MAX_LEVEL_COUNT } from './constants';
+import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions } from './tree-types'
+import { DEFAULT_LIMIT_N } from './constants';
 import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
 
 export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume' }
@@ -137,7 +137,7 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
         const pushFun = (parent: LevelNodeDescription, childId: string) => {
             if (controlSpec.exclude.includes(childId)) return;
             const path = [...parent.path, childId];
-            const node = parent.node.children[childId];
+            const node = (parent.node.children || {})[childId];
             includedPaths.add(path.join("-"));
             thisLevelNodes.push({ node, path, derivedWeight: weightDerivation(node, path) })
             remainingCount--;
@@ -194,25 +194,6 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
 }
 
 
-export function getLevelVisuals(visInfo: TreeInfo, svgD1: number, expandedControlInd: number | undefined, breakdownOptions: BreakdownOptions, selectedBreakdowns: SelectedBreakdowns): LevelVisual {
-    const out: LevelVisual = [];
-    if (selectedBreakdowns.length == 0) return out;
-    let visibleLevelCount = 1;
-    for (let meta of (visInfo?.meta || []).slice(2)) {
-        if (meta.totalNodes > 0) visibleLevelCount++;
-    }
-    let currentOptions = breakdownOptions
-    let topOffset = 0;
-    const stepSize = (expandedControlInd === undefined) ? svgD1 / visibleLevelCount : svgD1 / visibleLevelCount / 2;
-    for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
-        const totalSize = (expandedControlInd == i) ? svgD1 / 2 + stepSize : stepSize
-        out.push({ totalSize, topOffset, levelOptions: Object.keys(currentOptions) });
-        topOffset += totalSize;
-        if (i == (visibleLevelCount - 1)) topOffset += svgD1 / 2;
-        currentOptions = currentOptions[selectedBreakdowns[i]]?.children || {}
-    }
-    return out;
-}
 
 export function insertKeepingOrder<T>(elem: T, arr: T[], f: (l: T, r: T) => number) {
     //0 if equal, -x if l is 'less desirable' 

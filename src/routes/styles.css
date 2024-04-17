@@ -31,7 +31,7 @@
 	--color-theme-yellow: #FBF4E5;
 	--color-theme-lightblue: #DCE3EC;
 	--color-theme-lightblue2: #3F8EF7;
-	--color-theme-darkblue: #0F62FE;
+	--color-theme-darkblue: rgba(var(--color-range-15), 0.4);
 	--color-theme-blue: #6BA8DA;
 	--color-theme-purple: #C5C5E0;
 	--color-theme-pink: #CEBAD3;

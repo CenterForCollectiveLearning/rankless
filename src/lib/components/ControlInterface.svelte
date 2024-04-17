@@ -3,7 +3,7 @@
 
 	import type {
 		QcSpec,
-		LevelVisElem,
+		LevelOutSpec,
 		ControlSpec,
 		AttributeLabels,
 		SelectedBreakdowns
@@ -11,7 +11,6 @@
 	import { getTopFzf } from '$lib/search-util';
 	import Checkbox from './Checkbox.svelte';
 	import VerticalCheckbox from './VerticalCheckbox.svelte';
-	import { flipIf } from '$lib/visual-util';
 	import NumberSlider from './NumberSlider.svelte';
 	import { ALL_TYPES } from '$lib/constants';
 	import CogWheel from './CogWheel.svelte';
@@ -19,7 +18,7 @@
 	type FilterKey = 'exclude' | 'include';
 	const filterKeys: [FilterKey, FilterKey] = ['exclude', 'include'];
 
-	export let lVis: LevelVisElem;
+	export let lVis: LevelOutSpec;
 	export let selectedBreakdowns: SelectedBreakdowns;
 	export let index: number;
 	export let expandedIndex: number | undefined;
@@ -27,7 +26,6 @@
 	export let overHangRate: number;
 	export let sideBarD2: number;
 	export let svgD2: number;
-	export let isWideScreen: boolean;
 	export let currentQcSpec: QcSpec;
 	export let controlSpecs: ControlSpec[];
 
@@ -57,18 +55,10 @@
 	$: d1Offset = lVis.topOffset + lVis.totalSize - lVis.totalSize * (childD1Rate + overHangRate);
 	$: d1Size = lVis.totalSize * childD1Rate;
 
-	$: blockShape = flipIf({ x: 0, y: d1Offset, height: d1Size, width: sideBarD2 }, !isWideScreen);
+	$: blockShape = { x: 0, y: d1Offset, height: d1Size, width: sideBarD2 };
 
-	$: barShape = flipIf(
-		{ x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2 },
-		!isWideScreen
-	);
-
-	$: foShape = flipIf(
-		{ height: d1Size / mainScale, width: controlHtmlD2, x: 0, y: 0 },
-		!isWideScreen
-	);
-
+	$: barShape = { x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2 };
+	$: foShape = { height: d1Size / mainScale, width: controlHtmlD2, x: 0, y: 0 };
 	$: sliderWidth = foShape.width || 0 - labelWidth * 2;
 	$: svgScaleHeight = sliderHeight * mainScale;
 	$: heightInElements = foShape.height || 0 / svgScaleHeight;
@@ -110,15 +100,6 @@
 </script>
 
 <g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
-	<rect
-		fill="grey"
-		height="1"
-		width="1"
-		style="transform: matrix({barShape.width}, 0, 0, {barShape.height}, {barShape.x}, {barShape.y}); opacity: {isExpanded
-			? 0.5
-			: 0.3}"
-	/>
-
 	<foreignObject
 		width={foShape.width}
 		height={foShape.height}
@@ -126,22 +107,7 @@
 	>
 		<div class="main-controls" style="width: {foShape.width}px">
 			{#if !isExpanded}
-				<div>
-					<div class="sel-base sel-cover {lVis.levelOptions.length > 1 ? 'sel-clicky' : ''}">
-						<span>
-							{shortenLevel(selectedBreakdowns[index] || '')}
-						</span>
-					</div>
-					{#if lVis.levelOptions.length > 1}
-						<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
-							{#each lVis.levelOptions as bd}
-								<option value={bd}>
-									{bd}
-								</option>
-							{/each}
-						</select>
-					{/if}
-				</div>
+				<div />
 			{:else}
 				<div class="control-elem">
 					<VerticalCheckbox
@@ -222,10 +188,7 @@
 	</foreignObject>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<g
-		style="transform: matrix(0.03,0,0,0.03,{blockShape.width *
-			(isWideScreen ? 0.9 : 0.5)}, {blockShape.height * (isWideScreen ? 0.5 : 0.95)})"
-	>
+	<g style="transform: matrix(0.03,0,0,0.03,{blockShape.width * 0.9}, {blockShape.height * 0.9})">
 		<g
 			style="transform: scale(0.1) rotate({isExpanded
 				? 0
@@ -264,35 +227,6 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-	}
-
-	.sel-base {
-		position: absolute;
-		top: 0px;
-		left: 0px;
-		width: 100%;
-		height: 100%;
-	}
-
-	.sel-cover {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	select {
-		cursor: pointer;
-	}
-
-	.sel-clicky > span::after {
-		content: ' \25BD';
-	}
-
-	.sel-clicky > span {
-		border: 2px solid var(--color-theme-blue);
-		padding: 12px;
-		border-radius: 5px;
-		background: var(--color-theme-lightblue);
 	}
 
 	.control-hidden {

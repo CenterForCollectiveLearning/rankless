@@ -1,31 +1,30 @@
 <script lang="ts">
-	import {fade} from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import type {
 		EmbeddedNode,
 		TreeInfo,
 		OffsetInfo,
-		LevelVisual,
 		AttributeLabels,
 		QcSpec,
-		BareNode
+		BareNode,
+		LevelOutSpec
 	} from '$lib/tree-types';
-	import {getNodeByPath} from '$lib/tree-functions';
+	import { getNodeByPath } from '$lib/tree-functions';
 	import BrokenFittedText from './BrokenFittedText.svelte';
-	import {getColor} from '$lib/style-util';
-	import {treeInteract, type EventMap} from '$lib/tree-events';
-	import {flipIf, getHorizolntalSankeyPath, getSankeyPath} from '$lib/visual-util';
-	import {createEventDispatcher} from 'svelte';
+	import { getColor } from '$lib/style-util';
+	import { treeInteract, type EventMap } from '$lib/tree-events';
+	import { getSankeyPath } from '$lib/visual-util';
+	import { createEventDispatcher } from 'svelte';
 
 	export let qcSpec: QcSpec;
 	export let attributeLabels: AttributeLabels;
 	export let visibleTreeInfo: TreeInfo;
 	export let selectionState: BareNode;
-	export let levelVisuals: LevelVisual = [];
+	export let levelOutSpecs: LevelOutSpec[] = [];
 	export let pathInCompleteTree: string[] = [];
 
 	//export let treeVizKind: TreeVizKind = 'verticalRectangle';
 
-	export let isWideScreen: boolean;
 	export let branchReachBack = 0;
 	export let rootD2 = 30;
 	export let treeD2 = 70;
@@ -45,7 +44,7 @@
 	//only internally passed
 	export let d2Offset = (treeD2 - rootD2) / 2 + treeD2Offset;
 
-	const dispatch = createEventDispatcher < EventMap > ();
+	const dispatch = createEventDispatcher<EventMap>();
 	const defO = (n: number | undefined) => (n === undefined ? 0 : n);
 
 	$: onLevel = pathInCompleteTree.length;
@@ -54,7 +53,7 @@
 	$: visibleNode = getNodeByPath(pathInCompleteTree, visibleTreeInfo.tree);
 	$: nChildren = Object.keys(visibleNode?.children || {}).length;
 
-	$: currentLevelViz = levelVisuals[onLevel];
+	$: currentLevelViz = levelOutSpecs[onLevel];
 	$: nChildLevelNodes = visibleTreeInfo.meta[childLevel]?.totalNodes || 0;
 
 	$: d1Offset = defO(currentLevelViz?.topOffset);
@@ -98,7 +97,7 @@
 			childNode?.totalOffsetAmongSiblings,
 			minimumLinkSurface,
 			centralLinkSourceWidth * (nChildren > 1 ? linkSurfaceRate : 1) -
-			minimumLinkSurface * nChildren,
+				minimumLinkSurface * nChildren,
 			visibleNode?.childrenSumWeight || 1,
 			linkInternalMargin
 		);
@@ -118,40 +117,19 @@
 			y: branchD1End
 		};
 
-		let linkPath = '';
-		if (isWideScreen) {
-			linkPath = getSankeyPath(cTop, cBot, lSize, d1Size, downWardStart);
-		} else {
-			linkPath = getHorizolntalSankeyPath(
-				{x: cTop.y, y: cTop.x},
-				{x: cBot.y, y: cBot.x},
-				lSize,
-				d1Size,
-				downWardStart
-			);
-		}
-		let textShape = flipIf(
-			{
-				x: cachedProps.d2Offset + lSize.child * 0.18,
-				y: childrenD1Offset - childD1 * 0.05,
-				height: childD1 * 0.9,
-				width: lSize.child * 0.64
-			},
-			!isWideScreen
-		);
-		if (!isWideScreen) {
-			textShape.x -= textShape.width;
-			textShape.y += textShape.height;
-		}
-		const hoverShape = flipIf(
-			{
-				x: cachedProps.d2Offset,
-				y: branchD1End,
-				height: childD1,
-				width: lSize.child
-			},
-			!isWideScreen
-		);
+		let linkPath = getSankeyPath(cTop, cBot, lSize, d1Size, downWardStart);
+		let textShape = {
+			x: cachedProps.d2Offset + lSize.child * 0.18,
+			y: childrenD1Offset - childD1 * 0.05,
+			height: childD1 * 0.9,
+			width: lSize.child * 0.64
+		};
+		const hoverShape = {
+			x: cachedProps.d2Offset,
+			y: branchD1End,
+			height: childD1,
+			width: lSize.child
+		};
 		return {
 			id: childId,
 			cachedProps,
@@ -182,43 +160,74 @@
 			baseOffset +
 			(totalOffset?.rank || 0) * (baseSize + internalMargin) +
 			fDiv(totalOffset?.weight);
-		return {rootD2, d2Offset};
+		return { rootD2, d2Offset };
 	}
 
-	function getParsedChildren(visibleNode: EmbeddedNode | undefined, _: object, __: boolean) {
+	function getParsedChildren(visibleNode: EmbeddedNode | undefined, _: object) {
 		return Object.entries(visibleNode?.children || {}).map(([id, child]) => parseChild(id, child));
 	}
 
-	$: parsedChildren = getParsedChildren(visibleNode, currentLevelViz, isWideScreen);
+	$: parsedChildren = getParsedChildren(visibleNode, currentLevelViz);
 </script>
 
 {#each parsedChildren as { id, cachedProps, vizInfo, childNode, textShape, hoverShape } (id)}
-<defs>
-	<linearGradient id="path-grad-{vizInfo.strId}" gradientTransform="rotate(90)">
-		{#each [[0, 5], [20, 15], [50, 25]] as [offsetPct, opaPct]}
-		<stop offset="{offsetPct}%" stop-opacity={childNode.isSelected ? '80%' : `${opaPct}%`}
-			stop-color={vizInfo.colorStr} />
-		{/each}
-	</linearGradient>
-</defs>
+	<defs>
+		<linearGradient id="path-grad-{vizInfo.strId}" gradientTransform="rotate(90)">
+			{#each [[0, 5], [20, 15], [50, 25]] as [offsetPct, opaPct]}
+				<stop
+					offset="{offsetPct}%"
+					stop-opacity={childNode.isSelected ? '80%' : `${opaPct}%`}
+					stop-color={vizInfo.colorStr}
+				/>
+			{/each}
+		</linearGradient>
+	</defs>
 
-<path transition:fade={{ duration: 300 }} d={vizInfo.linkPath} fill="url('#path-grad-{vizInfo.strId}')" />
+	<path
+		transition:fade={{ duration: 300 }}
+		d={vizInfo.linkPath}
+		fill="url('#path-grad-{vizInfo.strId}')"
+	/>
 
-<BrokenFittedText text={childNode.name} {...textShape} />
+	<BrokenFittedText text={childNode.name} {...textShape} />
 
-<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<rect {...hoverShape} fill-opacity="0" on:mouseover={treeInteract( dispatch, 'highlight' ,
-	cachedProps.pathInCompleteTree, hoverShape.x, hoverShape.y )}
-	on:mouseleave={treeInteract(dispatch, 'de-highlight' , cachedProps.pathInCompleteTree, 0, 0)}
-	on:click={treeInteract(dispatch, 'toggle-select' , cachedProps.pathInCompleteTree, 0, 0)} />
+	<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<rect
+		{...hoverShape}
+		fill-opacity="0"
+		on:mouseover={treeInteract(
+			dispatch,
+			'highlight',
+			cachedProps.pathInCompleteTree,
+			hoverShape.x,
+			hoverShape.y
+		)}
+		on:mouseleave={treeInteract(dispatch, 'de-highlight', cachedProps.pathInCompleteTree, 0, 0)}
+		on:click={treeInteract(dispatch, 'toggle-select', cachedProps.pathInCompleteTree, 0, 0)}
+	/>
 
-{#if childNode.children}
-<svelte:self {...cachedProps} {isWideScreen} {qcSpec} {attributeLabels} {visibleTreeInfo} {selectionState}
-	{levelVisuals} {treeD2} {treeD2Offset} {childD1Rate} {overHangRate} {preStraightRate} {childBaseSize}
-	{linkSurfaceRate} {childrenInternalMargin} parentSideMargin={0} on:ti />
-{/if}
+	{#if childNode.children}
+		<svelte:self
+			{...cachedProps}
+			{qcSpec}
+			{attributeLabels}
+			{visibleTreeInfo}
+			{selectionState}
+			{levelOutSpecs}
+			{treeD2}
+			{treeD2Offset}
+			{childD1Rate}
+			{overHangRate}
+			{preStraightRate}
+			{childBaseSize}
+			{linkSurfaceRate}
+			{childrenInternalMargin}
+			parentSideMargin={0}
+			on:ti
+		/>
+	{/if}
 {/each}
 
 <style>
