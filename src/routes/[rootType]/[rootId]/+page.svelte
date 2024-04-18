@@ -290,7 +290,7 @@
 			//[hoverLocation, highlightedPath] = [event.detail.topLeftCorner, path];
 			return;
 		} else if (action == 'de-highlight') {
-			highlightedPath = [];
+			//highlightedPath = [];
 			return;
 		}
 		selectNode(path);
@@ -318,7 +318,7 @@
 		viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}"
 		xmlns="http://www.w3.org/2000/svg"
 	>
-		<rect id="header-bg" fill-opacity={0.3} {...headBarShape} />
+		<rect id="header-bg" fill-opacity={0.1} {...headBarShape} filter="url(#f10)" />
 
 		<QuercusBranches
 			qcSpec={currentQcSpec}
@@ -366,7 +366,7 @@
 			min={1}
 			max={maxOnOneLevel}
 			width={d1ToPixels(d2Offset) * 0.6}
-			sliderHeight={d1ToPixels(headerShape.height * 0.2)}
+			sliderHeight={d1ToPixels(Math.pow(headerShape.height, 0.3) * 1.4)}
 		/>
 	</div>
 	{#each levelOutSpecs || [] as levelSpec, index}
@@ -382,7 +382,7 @@
 		<div
 			transition:fade={{ duration: 200 }}
 			id="hover-info"
-			style={dBasedStyle({ top: d1PadSize }, { right: 2, width: 30 })}
+			style={dBasedStyle({ bottom: 1, height: 4 }, { right: 2, width: 96 })}
 		>
 			<PathLevelInfoBox
 				path={highlightedPath}
@@ -426,7 +426,7 @@
 	}
 
 	.head-sentence > p {
-		font-size: 1.8rem;
+		font-size: min(1.8rem, 3vw);
 	}
 
 	.floater {

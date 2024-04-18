@@ -12,7 +12,7 @@
 	export let thumbWidth = 80;
 	$: thumbHeight = sliderHeight - 4;
 	$: sliderWidth = width || 0 - labelWidth * 2;
-	$: r = labelWidth + ((sliderWidth - thumbWidth) * (value - min)) / (max - min);
+	$: r = ((sliderWidth - thumbWidth) * (value - min)) / (max - min);
 </script>
 
 <div
@@ -21,11 +21,9 @@
 	style="--slider-width: {sliderWidth}px; --label-width: {labelWidth}px; --thumb-width: {thumbWidth}px; --slider-height: {sliderHeight}px; --thumb-height: {thumbHeight}px; --r: {r}px"
 >
 	<div id="topn-slider">
-		<span>{min}</span>
 		<input id="topn-input" type="range" {min} {max} bind:value />
-		<span>{max}</span>
 	</div>
-	<label for="topn-input">show {value}</label>
+	<label for="topn-input"><span>−</span><span>+</span></label>
 </div>
 
 <style>
@@ -39,13 +37,14 @@
 	#topn-control > label {
 		text-align: center;
 		position: absolute;
+		font-weight: 600;
 		width: var(--thumb-width);
 		height: var(--slider-height);
 		left: var(--r);
 		top: 2px;
 		display: flex;
 		align-items: center;
-		justify-content: center;
+		justify-content: space-around;
 		z-index: 1;
 		pointer-events: none;
 		-webkit-user-select: none;
@@ -58,16 +57,10 @@
 		align-items: center;
 	}
 
-	#topn-slider > span {
-		width: var(--label-width);
-		text-align: center;
-	}
-
 	input[type='range'] {
 		width: var(--slider-width);
 		height: var(--slider-height);
-		background-color: var(--color-theme-lightblue);
-		opacity: 0.9;
+		background-color: var(--color-theme-darkgrey2);
 		border-radius: var(--slider-height);
 		z-index: 0;
 		outline: none;
@@ -80,7 +73,6 @@
 		height: var(--thumb-height);
 		background-color: rgba(var(--color-range-20), 0.6);
 		color: rgba(var(--color-range-20), 0.6);
-		border: 2px solid rgba(var(--color-range-50), 0.6);
 		border-radius: var(--thumb-height);
 		cursor: pointer;
 		position: relative;
@@ -92,9 +84,7 @@
 	input[type='range']::-moz-range-thumb {
 		width: var(--thumb-width);
 		height: var(--thumb-height);
-		background-color: rgba(var(--color-range-10), 0.6);
-		color: rgba(var(--color-range-25), 0.6);
-		border: 2px solid rgba(var(--color-range-50), 0.6);
+		background-color: var(--color-theme-yellow);
 		border-radius: var(--thumb-height);
 		cursor: pointer;
 		position: relative;

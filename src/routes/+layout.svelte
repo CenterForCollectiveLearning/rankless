@@ -54,7 +54,8 @@
 
 	let innerWidth: number;
 
-	let inHeight = 51;
+	let inHeight = 30;
+	let pad = 6;
 	let headPad = basePad;
 	let inputWidth = baseInW;
 	let headRightWidth = baseRightWidth;
@@ -84,15 +85,18 @@
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div id="main-fix" transition:fade={{ duration: 100 }}>
-		<div id="main-head" style="width: {inHeight + 8 * 2}px">
+		<div id="main-head" style="width: {inHeight + pad * 2}px">
 			<SearchResults bind:resultsHidden {searchTerm} />
-			<div id="head-l" style="width: {headRightWidth}px; padding-right: {headPad}px">
+			<div
+				id="head-l"
+				style="width: {headRightWidth}px; padding-right: {headPad}px;padding: {pad}px;"
+			>
 				{#if resultsHidden}
 					<svg
 						id="slim-stripes"
 						viewBox="-2 -2 22 22"
 						width={inHeight}
-						height={inHeight - 8}
+						height={inHeight - pad}
 						on:click={toggleOpen}
 					>
 						{#each [3, 9, 15] as sp}
@@ -165,7 +169,6 @@
 	}
 
 	#head-l {
-		padding: 8px;
 		padding-right: 40px;
 		display: flex;
 		align-items: center;
@@ -205,7 +208,7 @@
 	}
 
 	#search-input {
-		border-top: solid var(--color-theme-darkblue) 7px;
+		border-top: solid var(--color-theme-darkblue) 3px;
 		border-right: 0px;
 		border-left: 0px;
 		border-bottom: 0px;

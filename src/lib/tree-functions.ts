@@ -2,7 +2,7 @@ import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, 
 import { DEFAULT_LIMIT_N } from './constants';
 import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
 
-export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume' }
+export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'specialization' }
 
 type LevelNodeDescription = { path: PathInTree, node: WeightedNode, derivedWeight: number };
 

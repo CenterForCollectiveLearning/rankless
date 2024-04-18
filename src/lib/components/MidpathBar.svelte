@@ -66,6 +66,15 @@
 {/if}
 
 <style>
+	span {
+		text-align: center;
+	}
+
+	option {
+		font-size: min(1.5rem, 3.5vw);
+		text-align: center;
+	}
+
 	select {
 		cursor: pointer;
 	}
