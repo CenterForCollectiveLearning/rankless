@@ -1,4 +1,4 @@
-import type { EntityType, GLOBAL_BASE_TYPE } from "./constants";
+import type { EntityType } from "./constants";
 
 export type OMap<T> = Record<string, T>;
 export type PathInTree = string[];
@@ -11,8 +11,6 @@ export type SelectionOption = {
 };
 
 export type QcSpec = {
-    title: string;
-    description: string;
     root_entity_type: string;
     bifurcations: Bifurcation[];
 };
@@ -20,14 +18,13 @@ export type QcSpec = {
 export type Bifurcation = {
     attribute_kind: EntityType;
     resolver_id: string;
-    control_format_str: string;
     description: string;
 };
 
 
 export type QcSpecMap = OMap<QcSpec>;
 
-type AlGen<T> = { name: string; meta: T };
+type AlGen<T> = { name: string; specBaseline: number; meta: T };
 
 export type AttributeLabelsRaw = OMap<OMap<AlGen<string>>>;
 export type AttributeLabel = AlGen<OMap<number | object>>;
@@ -66,7 +63,3 @@ export type BreakdownOptions = OMap<{ children: BreakdownOptions, qcSpecs: strin
 export type SelectedBreakdowns = string[];
 export type LevelOutSpec = { totalSize: number; topOffset: number, isVisible: boolean, levelOptions: string[] };
 
-
-export type SpecializationBasis = { basis: EntityType | typeof GLOBAL_BASE_TYPE; hierarchy: EntityType | typeof GLOBAL_BASE_TYPE };
-export type SomeSpecBaselineMap = OMap<OMap<OMap<number> | number> | number>;
-export type SpecBaseOptions = OMap<SomeSpecBaselineMap>;

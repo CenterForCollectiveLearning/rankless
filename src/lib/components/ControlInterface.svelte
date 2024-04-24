@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import {fade} from 'svelte/transition';
 
 	import type {
 		QcSpec,
@@ -8,11 +8,10 @@
 		AttributeLabels,
 		SelectedBreakdowns
 	} from '$lib/tree-types';
-	import { getTopFzf } from '$lib/search-util';
+	import {getTopFzf} from '$lib/search-util';
 	import Checkbox from './Checkbox.svelte';
 	import VerticalCheckbox from './VerticalCheckbox.svelte';
 	import NumberSlider from './NumberSlider.svelte';
-	import { ALL_TYPES } from '$lib/constants';
 	import CogWheel from './CogWheel.svelte';
 
 	type FilterKey = 'exclude' | 'include';
@@ -36,13 +35,6 @@
 
 	let controlHtmlD2 = 320;
 
-	function shortenLevel(longName: string) {
-		for (let shortName of ALL_TYPES) {
-			if (longName.includes(shortName)) return shortName;
-		}
-		return 'Level';
-	}
-
 	let duration = 400;
 	let sliderHeight = 30;
 	let labelWidth = 30;
@@ -55,10 +47,10 @@
 	$: d1Offset = lVis.topOffset + lVis.totalSize - lVis.totalSize * (childD1Rate + overHangRate);
 	$: d1Size = lVis.totalSize * childD1Rate;
 
-	$: blockShape = { x: 0, y: d1Offset, height: d1Size, width: sideBarD2 };
+	$: blockShape = {x: 0, y: d1Offset, height: d1Size, width: sideBarD2};
 
-	$: barShape = { x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2 };
-	$: foShape = { height: d1Size / mainScale, width: controlHtmlD2, x: 0, y: 0 };
+	$: barShape = {x: -0.5 * svgD2, y: 0, height: lVis.totalSize * childD1Rate, width: svgD2 * 2};
+	$: foShape = {height: d1Size / mainScale, width: controlHtmlD2, x: 0, y: 0};
 	$: sliderWidth = foShape.width || 0 - labelWidth * 2;
 	$: svgScaleHeight = sliderHeight * mainScale;
 	$: heightInElements = foShape.height || 0 / svgScaleHeight;
@@ -100,107 +92,89 @@
 </script>
 
 <g transition:fade={{ duration }} style="--y-off: {blockShape.y}px; --x-off: {blockShape.x}px">
-	<foreignObject
-		width={foShape.width}
-		height={foShape.height}
-		style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)"
-	>
+	<foreignObject width={foShape.width} height={foShape.height}
+		style="transform: matrix({mainScale}, 0, 0, {mainScale}, 0, 0)">
 		<div class="main-controls" style="width: {foShape.width}px">
 			{#if !isExpanded}
-				<div />
+			<div />
 			{:else}
-				<div class="control-elem">
-					<VerticalCheckbox
-						bind:value={controlSpecs[index].size_base}
-						values={possScaleTypes}
-						width={sliderWidth}
-					/>
-				</div>
-				<div class="control-elem" style="">
-					{#if showTopN}
-						<NumberSlider
-							bind:value={controlSpecs[index].limit_n}
-							min={minShow}
-							max={maxOnOneLevel}
-							width={foShape.width}
-							{duration}
-						/>
-					{/if}
-				</div>
+			<div class="control-elem">
+				<VerticalCheckbox bind:value={controlSpecs[index].size_base} values={possScaleTypes}
+					width={sliderWidth} />
+			</div>
+			<div class="control-elem" style="">
+				{#if showTopN}
+				<NumberSlider bind:value={controlSpecs[index].limit_n} min={minShow} max={maxOnOneLevel}
+					width={foShape.width} {duration} />
+				{/if}
+			</div>
 
-				<div class="control-elem {minOrMaxClass}">
-					{#if showMinOrMaxControl}
-						<Checkbox bind:value={showSide} values={sideOptions} width={sliderWidth} />
-					{/if}
-				</div>
+			<div class="control-elem {minOrMaxClass}">
+				{#if showMinOrMaxControl}
+				<Checkbox bind:value={showSide} values={sideOptions} width={sliderWidth} />
+				{/if}
+			</div>
 
-				<div class="control-elem {expandedClass}">
-					{#if isExpanded}
-						<input
-							type="text"
-							bind:value={incExcFzfTerm}
-							placeholder="include/exclude"
-							class="fzf-input"
-						/>
-						{#if editIncludeExclude}
-							<div class="blurred-overlay">
-								<button class="close-button" on:click={disableIncludeExcludeEditable}
-									>&#10006;</button
-								>
-								{#each filterKeys as lKey}
-									{#each controlSpecs[index][lKey] as valInd}
-										<span class="selected-card"
-											>{labelFunction(valInd)}
-											<!-- svelte-ignore a11y-no-static-element-interactions -->
-											<!-- svelte-ignore a11y-click-events-have-key-events -->
-											<span on:click={dropFilterId(valInd, lKey)} class="clear-button"
-												>&#10006;</span
-											></span
-										>
-									{/each}
-								{/each}
-							</div>
-						{:else if topFzf.length > 0}
-							<div transition:fade={{ duration: 100 }} class="blurred-overlay">
-								<button class="close-button" on:click={() => (incExcFzfTerm = '')}>&#10006;</button>
-								<ul>
-									{#each topFzf as fzfResult}
-										<li>
-											{fzfResult.name}
-											<button on:click={addFilterId(fzfResult.id, 'include')}>include</button>
-											<button on:click={addFilterId(fzfResult.id, 'exclude')}>exclude</button>
-										</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-						<span class="include-exclude-desc">
-							<span>
-								{controlSpecs[index].include.length} included,
-								{controlSpecs[index].exclude.length} excluded
-							</span>
-							<button on:click={makeIncludeExcludeEditable}>edit</button>
-						</span>
-					{/if}
+			<div class="control-elem {expandedClass}">
+				{#if isExpanded}
+				<input type="text" bind:value={incExcFzfTerm} placeholder="include/exclude"
+					class="fzf-input" />
+				{#if editIncludeExclude}
+				<div class="blurred-overlay">
+					<button class="close-button"
+						on:click={disableIncludeExcludeEditable}>&#10006;</button>
+					{#each filterKeys as lKey}
+					{#each controlSpecs[index][lKey] as valInd}
+					<span class="selected-card">{labelFunction(valInd)}
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<span on:click={dropFilterId(valInd, lKey)}
+							class="clear-button">&#10006;</span></span>
+					{/each}
+					{/each}
 				</div>
+				{:else if topFzf.length > 0}
+				<div transition:fade={{ duration: 100 }} class="blurred-overlay">
+					<button class="close-button" on:click={()=> (incExcFzfTerm =
+						'')}>&#10006;</button>
+					<ul>
+						{#each topFzf as fzfResult}
+						<li>
+							{fzfResult.name}
+							<button on:click={addFilterId(fzfResult.id, 'include'
+								)}>include</button>
+							<button on:click={addFilterId(fzfResult.id, 'exclude'
+								)}>exclude</button>
+						</li>
+						{/each}
+					</ul>
+				</div>
+				{/if}
+				<span class="include-exclude-desc">
+					<span>
+						{controlSpecs[index].include.length} included,
+						{controlSpecs[index].exclude.length} excluded
+					</span>
+					<button on:click={makeIncludeExcludeEditable}>edit</button>
+				</span>
+				{/if}
+			</div>
 			{/if}
 		</div>
 	</foreignObject>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<g style="transform: matrix(0.03,0,0,0.03,{blockShape.width * 0.9}, {blockShape.height * 0.9})">
-		<g
-			style="transform: scale(0.1) rotate({isExpanded
+		<g style="transform: scale(0.1) rotate({isExpanded
 				? 0
-				: 120}deg) translate(-256px,-256px) ;cursor: pointer;"
-			on:click={() => {
-				if (isExpanded) {
-					expandedIndex = undefined;
-				} else {
-					expandedIndex = index;
-				}
+				: 120}deg) translate(-256px,-256px) ;cursor: pointer;" on:click={()=> {
+			if (isExpanded) {
+			expandedIndex = undefined;
+			} else {
+			expandedIndex = index;
+			}
 			}}
-		>
+			>
 			<CogWheel />
 			<rect height="512" width="512" opacity="0" />
 		</g>

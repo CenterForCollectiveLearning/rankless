@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { handleStore } from '$lib/tree-loading';
-	import { formatNumber } from '$lib/text-format-util';
-	import { getTopFzfInsts } from '$lib/search-util';
-	import type { SelectionOption } from '$lib/tree-types';
-	import { INSTITUTION_TYPE } from '$lib/constants';
+	import {base} from '$app/paths';
+	import {goto} from '$app/navigation';
+	import {onMount} from 'svelte';
+	import {handleStore} from '$lib/tree-loading';
+	import {formatNumber} from '$lib/text-format-util';
+	import {getTopFzfInsts} from '$lib/search-util';
+	import type {AttributeLabelsRaw, SelectionOption} from '$lib/tree-types';
+	import {INSTITUTION_TYPE} from '$lib/constants';
 
 	export let resultsHidden: boolean;
 	export let searchTerm: string;
@@ -14,9 +14,10 @@
 	let instOptions: SelectionOption[] = [];
 
 	onMount(() => {
-		handleStore('root-descriptions', (jsv) => {
-			// @ts-ignore
-			instOptions = jsv[INSTITUTION_TYPE];
+		handleStore('attribute-statics', (jsv: AttributeLabelsRaw) => {
+			instOptions = Object.entries(jsv[INSTITUTION_TYPE]).map(([id, v]) => {
+				return {id, name: v.name, meta: v.meta};
+			});
 		});
 	});
 
@@ -28,7 +29,7 @@
 	}
 	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 8);
 
-	function key_bind(key: { key: string }) {
+	function key_bind(key: {key: string}) {
 		if (key.key == 'Escape') {
 			resultsHidden = true;
 		}
@@ -40,17 +41,15 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="search-results" style="display: {resultsHidden ? 'none' : 'flex'};">
-	<span id="result-closer" on:click={() => (resultsHidden = true)}>&#10006;</span>
+	<span id="result-closer" on:click={()=> (resultsHidden = true)}>&#10006;</span>
 	{#each searchResults as searchResult}
-		<div on:click={() => onChange(searchResult)} class="result-card">
-			<h3 style="font-size: {searchResult.name.length > 60 ? 1.3 : 1.9}em;">
-				{searchResult.name}
-			</h3>
-			<span class="subtitle"
-				>{formatNumber(searchResult.papers)} papers,
-				{formatNumber(searchResult.citations)} citations</span
-			>
-		</div>
+	<div on:click={()=> onChange(searchResult)} class="result-card">
+		<h3 style="font-size: {searchResult.name.length > 60 ? 1.3 : 1.9}em;">
+			{searchResult.name}
+		</h3>
+		<span class="subtitle">{formatNumber(searchResult.papers)} papers,
+			{formatNumber(searchResult.citations)} citations</span>
+	</div>
 	{/each}
 </div>
 

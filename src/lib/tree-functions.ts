@@ -1,6 +1,6 @@
-import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions } from './tree-types'
+import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, EmbeddedNode, WeightedNode, TreeGen, OMap } from './tree-types'
 import { DEFAULT_LIMIT_N } from './constants';
-import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
+import { getSpecMetricObject } from './metric-calculation';
 
 export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'specialization' }
 
@@ -15,18 +15,15 @@ export function pruneTree(tree: BareNode, depth: number): BareNode {
 }
 
 export function deriveVisibleTree(
-    rootId: string,
     root: WeightedNode,
     controls: ControlSpec[],
     selections: BareNode,
     attributeLabels: AttributeLabels,
     qcSpec: QcSpec,
-    specBaselineOptions: SpecBaseOptions
 ): TreeInfo {
 
     const specCalcFun = (_: WeightedNode, path: PathInTree) => {
-        const entityKind = getEntityKind(path, qcSpec);
-        return getSpecMetricObject(root, DEFAULT_SPEC_BASES[entityKind], path, rootId, qcSpec, specBaselineOptions, attributeLabels).specMetric;
+        return getSpecMetricObject(root, path, qcSpec, attributeLabels).specMetric;
     }
 
 

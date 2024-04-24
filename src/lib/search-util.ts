@@ -1,5 +1,5 @@
 import { insertKeepingOrder } from "./tree-functions";
-	import unidecode from 'unidecode';
+import unidecode from 'unidecode';
 import type { OMap, SelectionOption } from "./tree-types";
 
 export function getTopFzf(term: string, entities: OMap<{ name: string }>, limit: number, emptyShow = false) {

@@ -4,34 +4,30 @@
 		NamedNode,
 		PathInTree,
 		QcSpec,
-		SpecBaseOptions,
 		WeightedNode
 	} from '$lib/tree-types';
-	import { formatNumber } from '$lib/text-format-util';
-	import { getNodeByPath, getChildName, getEntityKind } from '$lib/tree-functions';
-	import { DEFAULT_SPEC_BASES, getSpecMetricObject } from '$lib/metric-calculation';
+	import {formatNumber} from '$lib/text-format-util';
+	import {getNodeByPath, getChildName} from '$lib/tree-functions';
+	import {getSpecMetricObject} from '$lib/metric-calculation';
 
 	export let rootId: string;
 	export let path: PathInTree;
 	export let qcSpec: QcSpec;
 	export let attributeLabels: AttributeLabels;
 	export let weightedRoot: WeightedNode;
-	export let specBaselineOptions: SpecBaseOptions;
-
-	$: leafEntityKind = getEntityKind(path, qcSpec);
 
 	function getNodes(path: PathInTree, weightedRoot: WeightedNode): NamedNode[] {
 		if (qcSpec?.root_entity_type === undefined) {
 			return [];
 		}
 		const nodes = [
-			{ ...weightedRoot, name: attributeLabels[qcSpec.root_entity_type][rootId].name }
+			{...weightedRoot, name: attributeLabels[qcSpec.root_entity_type][rootId].name}
 		];
 		for (let i = 0; i < path.length; i++) {
 			const parentPath = path.slice(0, i + 1);
 			const pNode = getNodeByPath(parentPath, weightedRoot);
 			const name = getChildName(parentPath, attributeLabels, qcSpec);
-			nodes.push({ ...(pNode || { weight: 0 }), name });
+			nodes.push({...(pNode || {weight: 0}), name});
 		}
 		return nodes;
 	}
@@ -40,7 +36,7 @@
 		const num = leaf?.weight || 0;
 		const comparison = (parent?.weight || 0) / Object.keys(parent?.children || {}).length;
 		const rate = num / comparison;
-		return { num, comparison, rate, desc: getDesc(rate) };
+		return {num, comparison, rate, desc: getDesc(rate)};
 	}
 
 	function getDesc(rate: number) {
@@ -59,25 +55,18 @@
 	$: leaf = pathNodes[pathNodes.length - 1];
 
 	$: volumeInfo = getVolumeInfo(leaf, parent);
-	$: specInfo = getSpecMetricObject(
-		weightedRoot,
-		DEFAULT_SPEC_BASES[leafEntityKind],
-		path,
-		rootId,
-		qcSpec,
-		specBaselineOptions,
-		attributeLabels
-	);
+	$: specInfo = getSpecMetricObject(weightedRoot, path, qcSpec, attributeLabels);
 </script>
 
 {#if path != undefined}
-	<div class="box-container">
-		<h2>{leaf.name}</h2>
-		<p>{getDesc(specInfo.specMetric)} Specialization</p>
-		<p>
-			{formatNumber(volumeInfo.num)} ({(specInfo.nodeRate * 100).toFixed(2)}%) citation{#if volumeInfo.num > 1}s{/if}
-		</p>
-	</div>
+<div class="box-container">
+	<h2>{leaf.name}</h2>
+	<p>{getDesc(specInfo.specMetric)} Specialization</p>
+	<p>
+		{formatNumber(volumeInfo.num)} ({(specInfo.nodeRate * 100).toFixed(2)}%) citation{#if volumeInfo.num >
+		1}s{/if}
+	</p>
+</div>
 {/if}
 
 <style>
