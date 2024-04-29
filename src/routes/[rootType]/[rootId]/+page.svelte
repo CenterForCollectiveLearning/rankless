@@ -1,7 +1,7 @@
 <script lang="ts">
-	import {onMount} from 'svelte';
-	import {page} from '$app/stores';
-	import {afterNavigate} from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import { afterNavigate } from '$app/navigation';
 
 	import type {
 		TreeInteractionEvent,
@@ -29,9 +29,9 @@
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
 	import PathLevelInfoBox from '$lib/components/PathLevelInfoBox.svelte';
 	import BrokenFittedText from '$lib/components/BrokenFittedText.svelte';
-	import {fade} from 'svelte/transition';
-	import {handleStore, mainPreload} from '$lib/tree-loading';
-	import {MAX_LEVEL_COUNT} from '$lib/constants';
+	import { fade } from 'svelte/transition';
+	import { handleStore, mainPreload } from '$lib/tree-loading';
+	import { MAX_LEVEL_COUNT } from '$lib/constants';
 	import NumberSlider from '$lib/components/NumberSlider.svelte';
 	import MidpathBar from '$lib/components/MidpathBar.svelte';
 
@@ -79,14 +79,14 @@
 	let controlSpecs: ControlSpec[] = Array(MAX_LEVEL_COUNT)
 		.fill(0)
 		.map(() => {
-			return {...DEFAULT_CONTROL_SPEC};
+			return { ...DEFAULT_CONTROL_SPEC };
 		});
 	let maxOnOneLevel = 15;
 	let globalControlShowN = DEFAULT_CONTROL_SPEC.limit_n;
 	let breakdownOptions: BreakdownOptions = {};
 	let selectedBreakdowns: SelectedBreakdowns = [];
-	let completeTree: WeightedNode = {weight: 1};
-	let selectionState: BareNode = {children: {}};
+	let completeTree: WeightedNode = { weight: 1 };
+	let selectionState: BareNode = { children: {} };
 
 	let rootAttributes: AttributeLabel;
 
@@ -145,7 +145,7 @@
 					for (let [i, bif] of v.bifurcations.entries()) {
 						const bDef = bif.description;
 						if (!(bDef in boObj)) {
-							boObj[bDef] = {children: {}, qcSpecs: []};
+							boObj[bDef] = { children: {}, qcSpecs: [] };
 						}
 						boObj[bDef].qcSpecs.push(k);
 						boObj = boObj[bDef].children;
@@ -155,7 +155,7 @@
 			});
 			console.log(_OPTS);
 
-			let defaultQcSpec = Object.values(fullQcSpecs)[5];
+			let defaultQcSpec = Object.values(fullQcSpecs)[0];
 			for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
 				selectedBreakdowns.push(defaultQcSpec.bifurcations[i]?.description || '');
 			}
@@ -308,38 +308,85 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 {#if !Object.values(svgShape).includes(NaN) && !Object.values(svgShape).includes(undefined)}
-<svg viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}" xmlns="http://www.w3.org/2000/svg">
-	<rect id="header-bg" fill-opacity={0.1} {...headBarShape} filter="url(#f10)" />
+	<svg
+		viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<rect id="header-bg" fill-opacity={0.1} {...headBarShape} filter="url(#f10)" />
 
-	<QuercusBranches qcSpec={currentQcSpec} branchReachBack={svgD1 * headerRate} d2Offset={d2Offset + sideBarD2}
-		{rootD2} {attributeLabels} {visibleTreeInfo} {selectionState} {levelOutSpecs} treeD2={svgD2 - sideBarD2}
-		treeD2Offset={sideBarD2} {childD1Rate} {overHangRate} childBaseSize={minimumChildWidth}
-		on:ti={handleInteraction} />
-	<rect id="qc-header" {...headerShape} />
+		<QuercusBranches
+			qcSpec={currentQcSpec}
+			branchReachBack={svgD1 * headerRate}
+			d2Offset={d2Offset + sideBarD2}
+			{rootD2}
+			{attributeLabels}
+			{visibleTreeInfo}
+			{selectionState}
+			{levelOutSpecs}
+			treeD2={svgD2 - sideBarD2}
+			treeD2Offset={sideBarD2}
+			{childD1Rate}
+			{overHangRate}
+			childBaseSize={minimumChildWidth}
+			on:ti={handleInteraction}
+		/>
+		<rect id="qc-header" {...headerShape} />
 
-	<BrokenFittedText height={headerShape.height * 0.8} width={headerShape.width * 0.8} text={rootAttributes?.name
-		|| '' } anchor={'middle'} bottomAligned={false} x={headerShape.x + headerShape.width / 2}
-		y={headerShape.y + headerShape.height * 0.9} allowRotation={false} />
-</svg>
+		<BrokenFittedText
+			height={headerShape.height * 0.8}
+			width={headerShape.width * 0.8}
+			text={rootAttributes?.name || ''}
+			anchor={'middle'}
+			bottomAligned={false}
+			x={headerShape.x + headerShape.width / 2}
+			y={headerShape.y + headerShape.height * 0.9}
+			allowRotation={false}
+		/>
+	</svg>
 
-<div class="floater head-sentence" style="top: 0px;{dBasedStyle({ left: 20, width: 60 }, { height: d1PadSize })}">
-	<p>Papers authored by scholars at</p>
-</div>
+	<div
+		class="floater head-sentence"
+		style="top: 0px;{dBasedStyle({ left: 20, width: 60 }, { height: d1PadSize })}"
+	>
+		<p>Papers authored by scholars at</p>
+	</div>
 
-<div class="floater" style={dBasedStyle({ top: d1PadSize + headerShape.height * 0.4 }, { left: 3 })}>
-	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} width={d1ToPixels(d2Offset) * 0.6}
-		sliderHeight={d1ToPixels(Math.pow(headerShape.height, 0.3) * 1.4)} />
-</div>
-{#each levelOutSpecs || [] as levelSpec, index}
-<MidpathBar {index} {levelSpec} bind:selectedBreakdowns totalD1Offset={headerShape.height + d1PadSize} {dBasedStyle} />
-{/each}
-{#if showHoverInfo && highlightedPath.length > 0}
-<div transition:fade={{ duration: 200 }} id="hover-info" style={dBasedStyle({ bottom: 1, height: 4 }, { right: 2, width:
-	96 })}>
-	<PathLevelInfoBox path={highlightedPath} weightedRoot={completeTree} {attributeLabels} qcSpec={currentQcSpec}
-		rootId={selectedQcRootId} />
-</div>
-{/if}
+	<div
+		class="floater"
+		style={dBasedStyle({ top: d1PadSize + headerShape.height * 0.4 }, { left: 3 })}
+	>
+		<NumberSlider
+			bind:value={globalControlShowN}
+			min={1}
+			max={maxOnOneLevel}
+			width={d1ToPixels(d2Offset) * 0.6}
+			sliderHeight={d1ToPixels(Math.pow(headerShape.height, 0.3) * 1.4)}
+		/>
+	</div>
+	{#each levelOutSpecs || [] as levelSpec, index}
+		<MidpathBar
+			{index}
+			{levelSpec}
+			bind:selectedBreakdowns
+			totalD1Offset={headerShape.height + d1PadSize}
+			{dBasedStyle}
+		/>
+	{/each}
+	{#if showHoverInfo && highlightedPath.length > 0}
+		<div
+			transition:fade={{ duration: 200 }}
+			id="hover-info"
+			style={dBasedStyle({ bottom: 1, height: 4 }, { right: 2, width: 96 })}
+		>
+			<PathLevelInfoBox
+				path={highlightedPath}
+				weightedRoot={completeTree}
+				{attributeLabels}
+				qcSpec={currentQcSpec}
+				rootId={selectedQcRootId}
+			/>
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -371,7 +418,7 @@
 		align-items: center;
 	}
 
-	.head-sentence>p {
+	.head-sentence > p {
 		font-size: min(1.8rem, 3vw);
 	}
 

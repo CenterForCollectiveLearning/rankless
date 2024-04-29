@@ -7,7 +7,7 @@ export type TreeGen<T> = T & { children?: OMap<TreeGen<T>> };
 export type SelectionOption = {
     name: string;
     id: string;
-    meta?: string;
+    meta?: OMap<string | number>;
 };
 
 export type QcSpec = {
@@ -24,10 +24,7 @@ export type Bifurcation = {
 
 export type QcSpecMap = OMap<QcSpec>;
 
-type AlGen<T> = { name: string; specBaseline: number; meta: T };
-
-export type AttributeLabelsRaw = OMap<OMap<AlGen<string>>>;
-export type AttributeLabel = AlGen<OMap<number | object>>;
+export type AttributeLabel = { name: string; spec_baseline: number; meta: OMap<number | object> };
 export type AttributeLabels = OMap<OMap<AttributeLabel>>;
 
 
@@ -42,7 +39,6 @@ export type EmbeddedNode = TreeGen<{
     totalOffsetAmongSiblings: OffsetInfo;
     isSelected: boolean;
     scaleEnds: { min: number; max: number; mid: number };
-    specMetric: { rawMetric: number; normalizedMetric: number };
 }>;
 
 

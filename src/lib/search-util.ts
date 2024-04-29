@@ -28,8 +28,7 @@ export function getTopFzfInsts(term: string, entities: SelectionOption[], limit:
     for (const { id, name, meta } of entities) {
         const eLow = unidecode(name).toLowerCase()
         if (lowTerms.map((t) => eLow.includes(t)).reduce((l, r) => l && r)) {
-            const parsedMeta = JSON.parse(meta || '{}');
-            const newEntry = { name, id, papers: parsedMeta.papers || 0, citations: parsedMeta.citations || 0 }
+            const newEntry = { name, id, papers: meta.papers || 0, citations: meta.citations || 0 }
             if ((out.length < limit) || (out[out.length - 1].citations < newEntry.citations)) {
                 (out.length >= limit) && out.pop();
                 insertKeepingOrder(newEntry, out, (l, r) => r.citations - l.citations);
