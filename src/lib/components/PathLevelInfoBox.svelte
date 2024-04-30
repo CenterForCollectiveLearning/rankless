@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { AttributeLabels, PathInTree, QcSpec, WeightedNode } from '$lib/tree-types';
-	import { formatNumber } from '$lib/text-format-util';
-	import { getSpecMetricObject, type SpecInfo } from '$lib/metric-calculation';
+	import type {AttributeLabels, PathInTree, QcSpec, WeightedNode} from '$lib/tree-types';
+	import {formatNumber} from '$lib/text-format-util';
+	import {getSpecMetricObject, type SpecInfo} from '$lib/metric-calculation';
 
 	export let rootId: string;
 	export let path: PathInTree;
@@ -12,7 +12,7 @@
 	function getNodes(
 		path: PathInTree,
 		weightedRoot: WeightedNode
-	): { name: string; weight: number; spec: SpecInfo }[] {
+	): {name: string; weight: number; spec: SpecInfo}[] {
 		if (qcSpec?.root_entity_type === undefined) {
 			return [];
 		}
@@ -20,7 +20,7 @@
 			{
 				weight: weightedRoot.weight,
 				name: attributeLabels[qcSpec.root_entity_type][rootId].name,
-				spec: { nodeRate: 0, specMetric: 0, baselineRate: 0 }
+				spec: {nodeRate: 0, specMetric: 0, baselineRate: 0}
 			}
 		];
 		let divisorWeight = weightedRoot.weight;
@@ -32,7 +32,7 @@
 			const nextBif = qcSpec.bifurcations[i + 1];
 			const entityKind = bif.attribute_kind;
 			const entityN = Object.keys(attributeLabels[entityKind]).length;
-			currentNode = currentNode.children[childId] || { weight: 0, children: {} };
+			currentNode = currentNode.children[childId] || {weight: 0, children: {}};
 			nodes.push({
 				name: attributeLabels[entityKind][childId]?.name || 'Unknown',
 				weight: currentNode.weight,
@@ -55,7 +55,9 @@
 
 	function getDesc(rate: number) {
 		let desc = 'Average';
-		if (rate > 1.2) {
+		if (rate > 2) {
+			desc = 'Very High';
+		} else if (rate > 1.2) {
 			desc = 'High';
 		} else if (rate < 0.75) {
 			desc = 'Low';
@@ -68,16 +70,16 @@
 </script>
 
 {#if path != undefined}
-	<div class="box-container">
-		<h2>{leaf.name}</h2>
-		<p>
-			{getDesc(leaf.spec.specMetric)} Specialization {leaf.spec.specMetric} / {leaf.spec
-				.baselineRate}
-		</p>
-		<p>
-			{formatNumber(leaf.weight)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight > 1}s{/if}
-		</p>
-	</div>
+<div class="box-container">
+	<h2>{leaf.name}</h2>
+	<p>
+		{getDesc(leaf.spec.specMetric)} Specialization
+	</p>
+	<p>
+		{formatNumber(leaf.weight)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight >
+		1}s{/if}
+	</p>
+</div>
 {/if}
 
 <style>

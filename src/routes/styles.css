@@ -1,8 +1,8 @@
 /* @import '@fontsource/fira-mono'; */
 
 :root {
-	--font-body: 'Roboto', sans-serif;
-	--font-mono: 'Roboto Mono', monospace;;
+	--font-body: var(--font-mono);
+	--font-mono: 'Roboto Mono', monospace;
 
 	--color-range-5: 13, 198, 243;
 	--color-range-10: 25, 176, 230;
@@ -31,7 +31,7 @@
 	--color-theme-yellow: #FBF4E5;
 	--color-theme-lightblue: #DCE3EC;
 	--color-theme-lightblue2: #3F8EF7;
-	--color-theme-darkblue: rgba(var(--color-range-15), 0.4);
+	--color-theme-darkblue: rgba(var(--color-range-30), 0.9);
 	--color-theme-blue: #6BA8DA;
 	--color-theme-purple: #C5C5E0;
 	--color-theme-pink: #CEBAD3;
@@ -71,6 +71,19 @@ a {
 a:hover {
 	color: var(--color-theme-darkblue);
 	font-weight: bold;
+}
+
+input, option, select {
+	accent-color: var(--color-theme-darkblue);
+}
+
+
+.vert-zero {
+	height: 0px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 }
 
 .bstrip {
