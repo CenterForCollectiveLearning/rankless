@@ -99,7 +99,7 @@
 			{/if}
 			{#if slimOpened}
 			<div id="slim-drop">
-				<a href={`${base}`}>Home</a>
+				<a href={`${base}/`}>Home</a>
 				<a href={`${base}/about`}>About</a>
 				<a href={`${base}/methods`}>Methods</a>
 			</div>

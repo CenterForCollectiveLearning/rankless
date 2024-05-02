@@ -29,22 +29,21 @@
 	}
 	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 8);
 
-	function key_bind(key: {key: string}) {
+	function keyBind(key: {key: string}) {
 		if (key.key == 'Escape') {
 			resultsHidden = true;
 		}
 	}
 </script>
 
-<!-- TODO: map enter ans escape -->
-<svelte:window on:keydown={key_bind} />
+<svelte:window on:keydown={keyBind} />
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="search-results" style="display: {resultsHidden ? 'none' : 'flex'};">
 	<span id="result-closer" on:click={()=> (resultsHidden = true)}>&#10006;</span>
 	{#each searchResults as searchResult}
 	<div on:click={()=> onChange(searchResult)} class="result-card">
-		<h3 style="font-size: {searchResult.name.length > 60 ? 1.3 : 1.9}em;">
+		<h3 style="font-size: {searchResult.name.length > 50 ? 1.2 : 1.45}em;">
 			{searchResult.name}
 		</h3>
 		<span class="subtitle">{formatNumber(searchResult.papers)} papers,
@@ -83,7 +82,7 @@
 		min-width: 240px;
 		background-color: var(--color-theme-white);
 		border: solid var(--color-theme-darkblue) 1px;
-		box-shadow: 15px 15px 80px var(--color-theme-darkgrey3);
+		box-shadow: 8px 8px 13px var(--color-theme-darkgrey3);
 		border-radius: 10px;
 		margin: 40px;
 		margin-bottom: 20px;
@@ -102,7 +101,7 @@
 		transform: translateY(-10px);
 		background-color: var(--color-theme-lightgrey);
 		color: var(--color-theme-darkblue);
-		box-shadow: 5px 5px 20px var(--color-theme-darkgrey);
+		box-shadow: 3px 3px 13px var(--color-theme-darkgrey);
 	}
 
 	.subtitle {

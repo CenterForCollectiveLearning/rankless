@@ -1,25 +1,12 @@
 <script lang="ts">
-	import { getTopFzf } from '$lib/search-util';
-	import type { AttributeLabels, ControlSpec, LevelOutSpec, OMap, QcSpec } from '$lib/tree-types';
-	import { fade } from 'svelte/transition';
+	import type {LevelOutSpec, OMap} from '$lib/tree-types';
+	import {fade} from 'svelte/transition';
 
-	export let controlSpecs: ControlSpec[];
 	export let levelSpec: LevelOutSpec;
-	export let currentQcSpec: QcSpec;
-	export let attributeLabels: AttributeLabels;
-	export let selectedBreakdowns: string[];
 	export let index: number;
+	export let selectedBreakdowns: string[];
 	export let totalD1Offset: number;
 	export let dBasedStyle: (d1: OMap<number>, d2: OMap<number>, d3: OMap<number>) => string;
-
-	type FilterKey = 'include';
-
-	const filterKeys: [FilterKey] = ['include'];
-	let showSpecificSelection = false;
-	let incExcFzfTerm = '';
-	$: bif = currentQcSpec?.bifurcations[index];
-	$: levelAttributes = attributeLabels[bif?.attribute_kind] || {};
-	$: topFzf = getTopFzf(incExcFzfTerm, levelAttributes, 4);
 
 	function semantify(s: string) {
 		let sMaps = [
@@ -55,95 +42,29 @@
 		];
 		return sMaps[index][s] || s;
 	}
-	function addFilterId(id: string, key: FilterKey) {
-		return () => {
-			controlSpecs[index][key] = [id, ...controlSpecs[index][key].filter((x) => x != id)];
-		};
-	}
-
-	function dropFilterId(id: string, key: FilterKey) {
-		return () => {
-			controlSpecs[index][key] = controlSpecs[index][key].filter((x) => x != id);
-		};
-	}
-
-	function labelFunction(id: string) {
-		return levelAttributes[id]?.name || 'Unknown';
-	}
 </script>
 
 {#if levelSpec.isVisible}
-	<div
-		transition:fade={{ duration: 400 }}
-		class="sentenceline"
-		style={dBasedStyle(
-			{
-				top: levelSpec.topOffset + levelSpec.totalSize * 0.2 + totalD1Offset,
-				height: levelSpec.totalSize * 0.25
-			},
-			{},
-			{}
-		)}
-	>
-		<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
-			<span>
-				{semantify(selectedBreakdowns[index] || '')}
-			</span>
-		</div>
-		{#if levelSpec.levelOptions.length > 1}
-			<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
-				{#each levelSpec.levelOptions as bd}
-					<option value={bd}>
-						{semantify(bd)}
-					</option>
-				{/each}
-			</select>
-		{/if}
-		<div class="bg filler" />
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="includer"
-			on:click={() => {
-				showSpecificSelection = !showSpecificSelection;
-			}}
-		>
-			Include Specifics
-		</div>
-		{#if showSpecificSelection}
-			<div transition:fade={{ duration: 300 }} class="include-box">
-				<button
-					on:click={() => {
-						showSpecificSelection = false;
-					}}>&#10006;</button
-				>
-				<input type="text" bind:value={incExcFzfTerm} placeholder="include" class="fzf-input" />
-				<div class="inclusion-cards">
-					{#each filterKeys as lKey}
-						{#each controlSpecs[index][lKey] as valInd}
-							<span class="selected-card"
-								>{labelFunction(valInd)}
-								<!-- svelte-ignore a11y-no-static-element-interactions -->
-								<!-- svelte-ignore a11y-click-events-have-key-events -->
-								<span on:click={dropFilterId(valInd, lKey)} class="clear-button">&#10006;</span
-								></span
-							>
-						{/each}
-					{/each}
-				</div>
-				<div>
-					<ul>
-						{#each topFzf as fzfResult}
-							<li>
-								{fzfResult.name}
-								<button on:click={addFilterId(fzfResult.id, 'include')}>include</button>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			</div>
-		{/if}
+<div transition:fade={{ duration: 400 }} class="sentenceline" style={dBasedStyle( { top: levelSpec.topOffset +
+	levelSpec.totalSize * 0.2 + totalD1Offset, height: levelSpec.totalSize * 0.25 }, {}, {} )}>
+	<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
+		<span>
+			{semantify(selectedBreakdowns[index] || '')}
+		</span>
 	</div>
+	{#if levelSpec.levelOptions.length > 1}
+	<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
+		{#each levelSpec.levelOptions as bd}
+		<option value={bd}>
+			{semantify(bd)}
+		</option>
+		{/each}
+	</select>
+	{/if}
+	<div class="bg filler" />
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+</div>
 {/if}
 
 <style>
@@ -208,18 +129,18 @@
 		padding: 2px;
 	}
 
-	.include-box > button {
+	.include-box>button {
 		position: absolute;
 		right: 10px;
 		top: 10px;
 	}
 
-	.include-box > input {
+	.include-box>input {
 		height: 30px;
 		font-size: 1.2rem;
 	}
 
-	.include-box > div {
+	.include-box>div {
 		padding: 15px;
 		font-size: 1.6rem;
 	}
@@ -242,18 +163,18 @@
 		align-items: center;
 	}
 
-	.sel-clicky > span::after {
+	.sel-clicky>span::after {
 		content: ' \25BD';
 	}
 
-	.sel-base > span {
+	.sel-base>span {
 		padding: 8px;
 		background: #ffffff70;
 		backdrop-filter: blur(10px);
 		border-radius: 3px;
 	}
 
-	.sel-clicky > span {
+	.sel-clicky>span {
 		border: 1px solid var(--color-theme-darkblue);
 		color: var(--color-theme-darkblue);
 	}
