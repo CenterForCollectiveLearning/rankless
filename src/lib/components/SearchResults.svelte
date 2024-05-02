@@ -5,7 +5,7 @@
 	import {handleStore} from '$lib/tree-loading';
 	import {formatNumber} from '$lib/text-format-util';
 	import {getTopFzfInsts} from '$lib/search-util';
-	import type {AttributeLabelsRaw, SelectionOption} from '$lib/tree-types';
+	import type {AttributeLabels, SelectionOption} from '$lib/tree-types';
 	import {INSTITUTION_TYPE} from '$lib/constants';
 
 	export let resultsHidden: boolean;
@@ -14,17 +14,17 @@
 	let instOptions: SelectionOption[] = [];
 
 	onMount(() => {
-		handleStore('attribute-statics', (jsv: AttributeLabelsRaw) => {
+		handleStore('attribute-statics', (jsv: AttributeLabels) => {
 			instOptions = Object.entries(jsv[INSTITUTION_TYPE]).map(([id, v]) => {
 				return {id, name: v.name, meta: v.meta};
 			});
 		});
 	});
 
-	function onChange(e: SelectionOption | undefined) {
+	function onChange(e: {semanticId: string} | undefined) {
 		if (e != undefined) {
 			let rootType = INSTITUTION_TYPE;
-			goto(`${base}/${rootType}/${e.id}`);
+			goto(`${base}/${rootType}/${e.semanticId}`);
 		}
 	}
 	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 8);

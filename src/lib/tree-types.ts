@@ -7,7 +7,7 @@ export type TreeGen<T> = T & { children?: OMap<TreeGen<T>> };
 export type SelectionOption = {
     name: string;
     id: string;
-    meta?: OMap<string | number>;
+    meta?: OMap<string>;
 };
 
 export type QcSpec = {
@@ -24,7 +24,7 @@ export type Bifurcation = {
 
 export type QcSpecMap = OMap<QcSpec>;
 
-export type AttributeLabel = { name: string; spec_baseline: number; meta: OMap<number | object> };
+export type AttributeLabel = { name: string; spec_baselines: OMap<number>; meta: OMap<string> };
 export type AttributeLabels = OMap<OMap<AttributeLabel>>;
 
 

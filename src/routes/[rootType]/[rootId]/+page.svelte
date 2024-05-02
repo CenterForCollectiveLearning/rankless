@@ -1,7 +1,7 @@
 <script lang="ts">
-	import {onMount} from 'svelte';
-	import {page} from '$app/stores';
-	import {afterNavigate} from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import { afterNavigate } from '$app/navigation';
 
 	import type {
 		TreeInteractionEvent,
@@ -29,9 +29,9 @@
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
 	import PathLevelInfoBox from '$lib/components/PathLevelInfoBox.svelte';
 	import BrokenFittedText from '$lib/components/BrokenFittedText.svelte';
-	import {fade} from 'svelte/transition';
-	import {handleStore, mainPreload} from '$lib/tree-loading';
-	import {MAX_LEVEL_COUNT} from '$lib/constants';
+	import { fade } from 'svelte/transition';
+	import { handleStore, mainPreload } from '$lib/tree-loading';
+	import { MAX_LEVEL_COUNT } from '$lib/constants';
 	import NumberSlider from '$lib/components/NumberSlider.svelte';
 	import MidpathBar from '$lib/components/MidpathBar.svelte';
 
@@ -80,15 +80,15 @@
 	let controlSpecs: ControlSpec[] = Array(MAX_LEVEL_COUNT)
 		.fill(0)
 		.map(() => {
-			return {...DEFAULT_CONTROL_SPEC};
+			return { ...DEFAULT_CONTROL_SPEC };
 		});
 	let maxOnOneLevel = 15;
 	let globalControlShowN = DEFAULT_CONTROL_SPEC.limit_n;
 	let isGlobalSpecialization = true;
 	let breakdownOptions: BreakdownOptions = {};
 	let selectedBreakdowns: SelectedBreakdowns = [];
-	let completeTree: WeightedNode = {weight: 1};
-	let selectionState: BareNode = {children: {}};
+	let completeTree: WeightedNode = { weight: 1 };
+	let selectionState: BareNode = { children: {} };
 
 	let rootAttributes: AttributeLabel;
 
@@ -143,7 +143,7 @@
 					for (let [i, bif] of v.bifurcations.entries()) {
 						const bDef = bif.description;
 						if (!(bDef in boObj)) {
-							boObj[bDef] = {children: {}, qcSpecs: []};
+							boObj[bDef] = { children: {}, qcSpecs: [] };
 						}
 						boObj[bDef].qcSpecs.push(k);
 						boObj = boObj[bDef].children;
@@ -157,19 +157,36 @@
 			for (let i = 0; i < MAX_LEVEL_COUNT; i++) {
 				selectedBreakdowns.push(defaultQcSpec.bifurcations[i]?.description || '');
 			}
-			[attributeLabels, selectedBreakdowns, selectedQcRootId] = [
+			[attributeLabels, selectedBreakdowns, selectedQcRootId, rootType] = [
 				aLabels || {},
 				selectedBreakdowns,
-				$page.params.rootId
+				getIdFromSemantic(aLabels || {}, $page.params.rootType, $page.params.rootId),
+				$page.params.rootType
 			];
-			rootType = $page.params.rootType;
 		});
 	});
 
 	afterNavigate(() => {
-		selectedQcRootId = $page.params.rootId;
-		rootType = $page.params.rootType;
+		let parsedId = getIdFromSemantic(
+			attributeLabels || {},
+			$page.params.rootType,
+			$page.params.rootId
+		);
+		if (selectedQcRootId != parsedId || rootType != $page.params.rootType) {
+			selectionState = { children: {} };
+			selectedQcRootId = parsedId;
+			rootType = $page.params.rootType;
+		}
 	});
+
+	function getIdFromSemantic(labels: AttributeLabels, entityType: string, semanticId: string) {
+		for (const [k, v] of Object.entries(labels[entityType] || {})) {
+			if (semanticId == v.meta.semantic_id || '') {
+				return k;
+			}
+		}
+		return '0';
+	}
 
 	function alignToGlobalShown(shown: number) {
 		for (let i in controlSpecs) {
@@ -221,6 +238,10 @@
 		//iter breakdown selections, pick qc spec when only one option remains, fill rest of selected breakdowns
 		//find depth upto breakdowns match with last qc
 		//prune selection to that depth
+
+		for (let i = breakdownMatchLevel; i < controlSpecs.length; i++) {
+			controlSpecs[i].include = [];
+		}
 
 		rootAttributes = attributeLabels[rootType][selectedQcRootId];
 
@@ -311,57 +332,121 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 {#if !Object.values(svgShape).includes(NaN) && !Object.values(svgShape).includes(undefined)}
-<svg viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}" xmlns="http://www.w3.org/2000/svg">
-	<QuercusBranches qcSpec={currentQcSpec} branchReachBack={(svgD1 * headerRate) / 100} d2Offset={d2Offset +
-		sideBarD2} {rootD2} {attributeLabels} {visibleTreeInfo} {selectionState} {levelOutSpecs} treeD2={svgD2 -
-		sideBarD2} treeD2Offset={sideBarD2} {childD1Rate} {overHangRate} childBaseSize={minimumChildWidth}
-		on:ti={handleInteraction} />
-	<rect id="qc-header" {...headerShape} rx="0.4" />
+	<svg
+		viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<QuercusBranches
+			qcSpec={currentQcSpec}
+			branchReachBack={(svgD1 * headerRate) / 100}
+			d2Offset={d2Offset + sideBarD2}
+			{rootD2}
+			{attributeLabels}
+			{visibleTreeInfo}
+			{selectionState}
+			{levelOutSpecs}
+			treeD2={svgD2 - sideBarD2}
+			treeD2Offset={sideBarD2}
+			{childD1Rate}
+			{overHangRate}
+			childBaseSize={minimumChildWidth}
+			on:ti={handleInteraction}
+		/>
+		<rect id="qc-header" {...headerShape} rx="0.4" />
 
-	<BrokenFittedText height={headerShape.height * 0.8} width={headerShape.width * 0.8} text={rootAttributes?.name
-		|| '' } anchor={'middle'} bottomAligned={false} x={headerShape.x + headerShape.width / 2}
-		y={headerShape.y + headerShape.height * 0.9} allowRotation={false} />
-</svg>
+		<BrokenFittedText
+			height={headerShape.height * 0.8}
+			width={headerShape.width * 0.8}
+			text={rootAttributes?.name || ''}
+			anchor={'middle'}
+			bottomAligned={false}
+			x={headerShape.x + headerShape.width / 2}
+			y={headerShape.y + headerShape.height * 0.9}
+			allowRotation={false}
+		/>
+	</svg>
 
-<div class="floater head-sentence" style={dBasedStyle({ top: 0 }, { left: 20, width: 60 }, { height: d1TopPadRate })}>
-	<p>Papers authored by scholars at</p>
-</div>
-
-<div class="floater" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left: 3, width:
-	d2Offset * 0.7 }, {} )}>
-	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
-</div>
-<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left:
-	d2Offset + headerShape.width + 3, width: d2Offset * 0.7 }, {} )}>
-	<div id="spec-container">
-		<span id="spec-info-hover" on:mouseover={()=> {
-			showSpecInfoHover = true;
-			}}
-			on:mouseleave={() => {
-			showSpecInfoHover = false;
-			}}>i</span>
-		<span id="spec-label">Specialization</span>
-		<input type="checkbox" bind:checked={isGlobalSpecialization} />
+	<div
+		class="floater head-sentence"
+		style={dBasedStyle({ top: 0 }, { left: 20, width: 60 }, { height: d1TopPadRate })}
+	>
+		<p>Papers authored by scholars at</p>
 	</div>
-</div>
-{#each levelOutSpecs || [] as levelSpec, index}
-<MidpathBar {index} {levelSpec} bind:selectedBreakdowns totalD1Offset={headerShape.height + d1PadSize} {dBasedStyle} />
-{/each}
-{#if showHoverInfo && highlightedPath.length > 0}
-<div transition:fade={{ duration: 200 }} class="hoverover" style={dBasedStyle({}, { right: 2, width: 96 }, { bottom: 1,
-	height: d1BottomPadRate / 2 })}>
-	<PathLevelInfoBox path={highlightedPath} weightedRoot={completeTree} {attributeLabels} qcSpec={currentQcSpec}
-		rootId={selectedQcRootId} />
-</div>
-{/if}
-{#if showSpecInfoHover}
-<div class="floater hoverover" id="spec-hover" style={dBasedStyle( { top: d1PadSize + headerShape.height }, { left:
-	d2Offset + headerShape.width, width: headerShape.width * 1.0 }, {} )}>
-	Specialization is calculated using the expected prevelance of a country, source, or concept,
-	and comparing it to the one present in the current breakdown flow. If it is switched off, the
-	sheer volume of citations is considered.
-</div>
-{/if}
+
+	<div
+		class="floater"
+		style={dBasedStyle(
+			{ top: d1PadSize + headerShape.height * 0.5, height: 0 },
+			{ left: 3, width: d2Offset * 0.7 },
+			{}
+		)}
+	>
+		<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
+	</div>
+	<div
+		class="floater vert-zero"
+		style={dBasedStyle(
+			{ top: d1PadSize + headerShape.height * 0.5, height: 0 },
+			{ left: d2Offset + headerShape.width + 3, width: d2Offset * 0.7 },
+			{}
+		)}
+	>
+		<div id="spec-container">
+			<span
+				id="spec-info-hover"
+				on:mouseover={() => {
+					showSpecInfoHover = true;
+				}}
+				on:mouseleave={() => {
+					showSpecInfoHover = false;
+				}}>i</span
+			>
+			<span id="spec-label">Specialization</span>
+			<input type="checkbox" bind:checked={isGlobalSpecialization} />
+		</div>
+	</div>
+	{#each levelOutSpecs || [] as levelSpec, index}
+		<MidpathBar
+			{index}
+			{levelSpec}
+			bind:selectedBreakdowns
+			bind:controlSpecs
+			totalD1Offset={headerShape.height + d1PadSize}
+			{dBasedStyle}
+			{currentQcSpec}
+			{attributeLabels}
+		/>
+	{/each}
+	{#if showHoverInfo && highlightedPath.length > 0}
+		<div
+			transition:fade={{ duration: 200 }}
+			class="hoverover"
+			style={dBasedStyle({}, { right: 2, width: 96 }, { bottom: 1, height: d1BottomPadRate / 2 })}
+		>
+			<PathLevelInfoBox
+				path={highlightedPath}
+				weightedRoot={completeTree}
+				{attributeLabels}
+				qcSpec={currentQcSpec}
+				rootId={selectedQcRootId}
+			/>
+		</div>
+	{/if}
+	{#if showSpecInfoHover}
+		<div
+			class="floater hoverover"
+			id="spec-hover"
+			style={dBasedStyle(
+				{ top: d1PadSize + headerShape.height },
+				{ left: d2Offset + headerShape.width, width: headerShape.width * 1.0 },
+				{}
+			)}
+		>
+			Specialization is calculated using the expected prevelance of a country, source, or concept,
+			and comparing it to the one present in the current breakdown flow. If it is switched off, the
+			sheer volume of citations is considered.
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -417,7 +502,7 @@
 		align-items: center;
 	}
 
-	.head-sentence>p {
+	.head-sentence > p {
 		font-size: min(1.8rem, 3vw);
 	}
 

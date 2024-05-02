@@ -90,7 +90,6 @@ export function deriveVisibleTree(
         }
         meta.push({ totalWeight: levelWeight, totalNodes: levelRank })
     }
-    console.log("calced", tree);
     return { tree, meta }
 
 }
@@ -113,9 +112,6 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
         return getNodeByPath(path.slice(0, denominatorIndex + 1), root)?.weight || 0
     }
 
-    console.log(qcSpec)
-
-
     LevelLoop:
     for (let i = 0; i < Math.min(controls.length, qcSpec.bifurcations.length); i++) {
         const controlSpec = controls[i];
@@ -127,7 +123,8 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
         const eNum = Object.keys(attributeLabels[entityKind]).length
 
         const weightDerivation = (controlSpec.size_base == 'volume') ?
-            (node: WeightedNode) => (node.weight) : (node: WeightedNode, childId: string, denominatorWeight: number) => (getSpecMetricObject(node, denominatorWeight, eNum, entityKind, attributeLabels, childId).specMetric);
+            (node: WeightedNode) => (node?.weight || 0) :
+            (node: WeightedNode, childId: string, denominatorWeight: number) => (getSpecMetricObject(node, denominatorWeight, eNum, entityKind, attributeLabels, childId, qcSpec.bifurcations[i].description).specMetric);
 
         const isBetterExtreme = (controlSpec.show_top) ?
             (l: LevelNodeDescription, r: LevelNodeDescription) => (l.derivedWeight - r.derivedWeight) :

@@ -42,7 +42,8 @@
 					entityN,
 					entityKind,
 					attributeLabels,
-					childId
+					childId,
+					bif.description
 				)
 			});
 			if (nextBif?.resolver_id != divisorResolver) {
@@ -55,7 +56,7 @@
 
 	function getDesc(rate: number) {
 		let desc = 'Average';
-		if (rate > 2) {
+		if (rate > 2.5) {
 			desc = 'Very High';
 		} else if (rate > 1.2) {
 			desc = 'High';

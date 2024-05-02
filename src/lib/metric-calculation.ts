@@ -10,12 +10,13 @@ export function getSpecMetricObject(
     entityKind: string,
     attributeLabels: AttributeLabels,
     childId: string,
+    resolver_description: string
 ): SpecInfo {
 
     const nodeRate = (node?.weight || 0) / nodeDivisor
-    const baselineRate: number = attributeLabels[entityKind][childId]?.spec_baseline || (nodeRate * 0.5)
+    const baselineRate: number = attributeLabels[entityKind][childId]?.spec_baselines[resolver_description] || (nodeRate * 0.5)
     const normalizerEps = 1 / entityNumCount
-    const alpha = 0.4
+    const alpha = 0.2
 
     return {
         nodeRate, baselineRate, specMetric: nodeRate / (baselineRate + alpha * normalizerEps)
