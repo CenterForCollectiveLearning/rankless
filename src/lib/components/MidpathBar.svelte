@@ -81,17 +81,6 @@
 		cursor: pointer;
 	}
 
-	.includer {
-		position: absolute;
-		padding: 6px;
-		left: 10px;
-		top: 10px;
-		background-color: rgba(var(--color-range-65), 0.4);
-		border-radius: 4px;
-		cursor: pointer;
-		z-index: 7;
-	}
-
 	.sentenceline {
 		position: fixed;
 		transition: all 700ms;
@@ -109,40 +98,6 @@
 		left: 0px;
 		width: 100%;
 		height: 100%;
-	}
-
-	.include-box {
-		position: absolute;
-		left: 0px;
-		top: -10svh;
-		width: 100%;
-		height: 30svh;
-		z-index: 6;
-		display: flex;
-		justify-content: space-around;
-		align-items: center;
-		background-color: rgba(var(--color-range-15), 0.93);
-	}
-
-	.clear-button {
-		cursor: pointer;
-		padding: 2px;
-	}
-
-	.include-box>button {
-		position: absolute;
-		right: 10px;
-		top: 10px;
-	}
-
-	.include-box>input {
-		height: 30px;
-		font-size: 1.2rem;
-	}
-
-	.include-box>div {
-		padding: 15px;
-		font-size: 1.6rem;
 	}
 
 	.bg {
