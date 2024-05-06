@@ -66,6 +66,8 @@
 		return desc;
 	}
 
+	let hoverSpec = false;
+
 	$: pathNodes = getNodes(path || [], weightedRoot);
 	$: leaf = pathNodes[pathNodes.length - 1];
 </script>
@@ -73,9 +75,22 @@
 {#if path != undefined}
 <div class="box-container">
 	<h2>{leaf.name}</h2>
-	<p>
+	<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+	<p on:mouseover={()=> {
+		hoverSpec = false;
+		}}
+		on:mouseleave={() => {
+		hoverSpec = false;
+		}}
+		>
 		{getDesc(leaf.spec.specMetric)} Specialization
 	</p>
+	{#if hoverSpec}
+	<span id="spec-hover">
+		metric = {formatNumber(leaf.spec.specMetric, 3)}; base = {leaf.spec.baselineRate}; nodeRate
+		= {leaf.spec.nodeRate}; childN={leaf.weight}
+	</span>
+	{/if}
 	<p>
 		{formatNumber(leaf.weight)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight >
 		1}s{/if}
@@ -90,8 +105,7 @@
 		font-size: min(1.1rem, 2vw);
 	}
 
-	h2,
-	h3 {
+	h2 {
 		margin: 0px;
 		text-align: center;
 	}
@@ -101,7 +115,6 @@
 		font-size: min(1rem, 2vw);
 	}
 
-	h3,
 	p {
 		padding-left: 20px;
 	}
@@ -112,5 +125,13 @@
 		justify-content: space-around;
 		align-items: center;
 		height: 100%;
+	}
+
+	#spec-hover {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		padding: 15px;
+		background-color: var(--color-theme-lightgrey);
 	}
 </style>

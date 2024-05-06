@@ -1,17 +1,17 @@
 <script lang="ts">
-	import {APP_NAME} from '$lib/constants';
-	import {base} from '$app/paths';
+	import { APP_NAME } from '$lib/constants';
+	import { base } from '$app/paths';
 	import './styles.css';
 	import SearchLogo from '$lib/components/SearchLogo.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
-	import {afterNavigate} from '$app/navigation';
-	import {onMount} from 'svelte';
-	import {parse} from 'platform';
-	import {fade} from 'svelte/transition';
+	import { afterNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { parse } from 'platform';
+	import { fade } from 'svelte/transition';
 
 	let hPen = 0;
 
-	let uInfo: {product?: string} = {};
+	let uInfo: { product?: string } = {};
 
 	onMount(() => {
 		uInfo = parse(navigator.userAgent);
@@ -73,54 +73,84 @@
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
-		rel="stylesheet" />
-	<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-		rel="stylesheet" />
-	<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+		rel="stylesheet"
+	/>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+		rel="stylesheet"
+	/>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap"
+		rel="stylesheet"
+	/>
 	<title>{APP_NAME}</title>
 </svelte:head>
 
 <svelte:window bind:innerWidth />
 {#if innerWidth != undefined}
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div id="main-fix" transition:fade={{ duration: 100 }}>
-	<div id="main-head" style="width: {inHeight + pad * 2}px">
-		<SearchResults bind:resultsHidden {searchTerm} />
-		<div id="head-l" style="width: {headRightWidth}px; padding-right: {headPad}px;padding: {pad}px;">
-			{#if resultsHidden}
-			<svg id="slim-stripes" viewBox="-2 -2 22 22" width={inHeight} height={inHeight - pad}
-				on:click={toggleOpen}>
-				{#each [3, 9, 15] as sp}
-				<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
-				{/each}
-			</svg>
-			{/if}
-			{#if slimOpened}
-			<div id="slim-drop">
-				<a href={`${base}/`}>Home</a>
-				<a href={`${base}/about`}>About</a>
-				<a href={`${base}/methods`}>Methods</a>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div id="main-fix" transition:fade={{ duration: 100 }}>
+		<div id="main-head" style="width: {inHeight + pad * 2}px">
+			<SearchResults bind:resultsHidden {searchTerm} />
+			<div
+				id="head-l"
+				style="width: {headRightWidth}px; padding-right: {headPad}px;padding: {pad}px;"
+			>
+				{#if resultsHidden}
+					<svg
+						id="slim-stripes"
+						viewBox="-2 -2 22 22"
+						width={inHeight}
+						height={inHeight - pad}
+						on:click={toggleOpen}
+					>
+						{#each [3, 9, 15] as sp}
+							<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
+						{/each}
+					</svg>
+				{/if}
+				{#if slimOpened}
+					<div id="slim-drop">
+						<a href={`${base}/`}>Home</a>
+						<a href={`${base}/about`}>About</a>
+						<a href={`${base}/about#faq`}>Methods</a>
+					</div>
+				{/if}
 			</div>
-			{/if}
+			<input
+				bind:value={searchTerm}
+				on:focus={onFocus}
+				{placeholder}
+				type="text"
+				class="search-block"
+				id="search-input"
+				style="padding-left: {inLeftPad}px;height: {inHeight -
+					hPen}px; right: {inRight}px; width: {inputWidth}px"
+			/>
+			<svg
+				class="search-block"
+				id="search-logo"
+				width={inHeight}
+				height={inHeight}
+				viewBox="-10 -10 60 50"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+				style="right: {inRight + inputWidth + inLeftPad - inHeight}px;"
+			>
+				<SearchLogo />
+			</svg>
 		</div>
-		<input bind:value={searchTerm} on:focus={onFocus} {placeholder} type="text" class="search-block"
-			id="search-input" style="padding-left: {inLeftPad}px;height: {inHeight -
-					hPen}px; right: {inRight}px; width: {inputWidth}px" />
-		<svg class="search-block" id="search-logo" width={inHeight} height={inHeight} viewBox="-10 -10 60 50"
-			fill="none" xmlns="http://www.w3.org/2000/svg"
-			style="right: {inRight + inputWidth + inLeftPad - inHeight}px;">
-			<SearchLogo />
-		</svg>
-	</div>
-	<through on:click={()=> {
-		slimOpened = false;
-		}}
+		<through
+			on:click={() => {
+				slimOpened = false;
+			}}
 		>
-		<slot />
-	</through>
-</div>
+			<slot />
+		</through>
+	</div>
 {/if}
 
 <style>

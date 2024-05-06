@@ -6,7 +6,7 @@ export function formatNumber(n: number, maxFix: number = 2) {
     } else if (n < 1) {
         return n.toFixed(Math.min(2, maxFix));
     } else if (n < 10) {
-        return n.toFixed(1);
+        return n.toFixed(maxFix);
     } else {
         return n.toFixed(0);
     }

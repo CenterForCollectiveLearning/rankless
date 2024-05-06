@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type {LevelOutSpec, OMap} from '$lib/tree-types';
-	import {fade} from 'svelte/transition';
+	import type { LevelOutSpec, OMap } from '$lib/tree-types';
+	import { fade } from 'svelte/transition';
 
 	export let levelSpec: LevelOutSpec;
 	export let index: number;
@@ -9,34 +9,36 @@
 	export let dBasedStyle: (d1: OMap<number>, d2: OMap<number>, d3: OMap<number>) => string;
 
 	function semantify(s: string) {
+		let sixPath = selectedBreakdowns[0] == '1-w2qs-1';
 		let sMaps = [
 			{
-				'1-concept-hierarchy-0': 'are cited by papers covering',
-				'1-w2qs-1': 'are cited by papers published in',
-				'0-country-hierarchy-0': 'are authored by authors working in',
-				'0-concept-hierarchy-0': 'covering the concept of',
+				'0-concept-hierarchy-0': 'working on',
+				'1-concept-hierarchy-0': 'are cited by papers in',
+				'0-country-hierarchy-0': 'co-author with scholars working in',
 				'1-country-hierarchy-0': 'are cited by authors working in',
-				'0-w2qs-0': 'are published in journals categorized as'
+				'0-w2qs-0': 'publish in journals categorized as',
+				'1-w2qs-1': 'are cited in papers published in'
 			},
 			{
-				'1-concept-hierarchy-0': 'are cited by authors working on',
-				'1-country-hierarchy-0': 'are cited by authors working in', // TODO: repeats
-				'1-country-hierarchy-1': 'affiliated with',
-				'1-concept-hierarchy-1': 'in particular',
-				'0-concept-hierarchy-0': 'cover the topic of',
-				'0-w2qs-1': 'in the journals'
+				'1-concept-hierarchy-0': 'and are cited by authors working on',
+				'1-concept-hierarchy-1': 'and in particular',
+				'0-country-hierarchy-1': 'working at',
+				'1-country-hierarchy-0': (sixPath ? '' : 'are cited ') + 'by authors in',
+				'1-country-hierarchy-1': 'at',
+				'0-w2qs-1': 'such as'
 			},
 			{
-				'1-concept-hierarchy-1': 'in particular',
-				'1-country-hierarchy-1': 'affiliated with',
-				'1-concept-hierarchy-0': 'working on',
+				'0-concept-hierarchy-0': 'focused on',
+				'1-concept-hierarchy-1': 'and in particular in',
+				'1-country-hierarchy-1': 'working at',
+				'1-concept-hierarchy-0': (sixPath ? 'working ' : '') + 'on',
 				'1-w2qs-1': 'published in',
-				'0-concept-hierarchy-1': 'in particular',
-				'1-country-hierarchy-0': 'cited by authors working in'
+				'1-country-hierarchy-0': 'and are cited by authors working in'
 			},
 			{
-				'1-concept-hierarchy-0': 'working on',
-				'1-concept-hierarchy-1': 'in particular'
+				'0-concept-hierarchy-1': 'and in particular',
+				'1-concept-hierarchy-0': 'on',
+				'1-concept-hierarchy-1': 'and in particular'
 			},
 			{}
 		];
@@ -45,26 +47,36 @@
 </script>
 
 {#if levelSpec.isVisible}
-<div transition:fade={{ duration: 400 }} class="sentenceline" style={dBasedStyle( { top: levelSpec.topOffset +
-	levelSpec.totalSize * 0.2 + totalD1Offset, height: levelSpec.totalSize * 0.25 }, {}, {} )}>
-	<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
-		<span>
-			{semantify(selectedBreakdowns[index] || '')}
-		</span>
+	<div
+		transition:fade={{ duration: 400 }}
+		class="sentenceline"
+		style={dBasedStyle(
+			{
+				top: levelSpec.topOffset + levelSpec.totalSize * 0.2 + totalD1Offset,
+				height: levelSpec.totalSize * 0.25
+			},
+			{},
+			{}
+		)}
+	>
+		<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
+			<span>
+				{semantify(selectedBreakdowns[index] || '')}
+			</span>
+		</div>
+		{#if levelSpec.levelOptions.length > 1}
+			<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
+				{#each levelSpec.levelOptions as bd}
+					<option value={bd}>
+						{semantify(bd)}
+					</option>
+				{/each}
+			</select>
+		{/if}
+		<div class="bg filler" />
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
 	</div>
-	{#if levelSpec.levelOptions.length > 1}
-	<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
-		{#each levelSpec.levelOptions as bd}
-		<option value={bd}>
-			{semantify(bd)}
-		</option>
-		{/each}
-	</select>
-	{/if}
-	<div class="bg filler" />
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-</div>
 {/if}
 
 <style>
@@ -118,18 +130,18 @@
 		align-items: center;
 	}
 
-	.sel-clicky>span::after {
+	.sel-clicky > span::after {
 		content: ' \25BD';
 	}
 
-	.sel-base>span {
+	.sel-base > span {
 		padding: 8px;
 		background: #ffffff70;
 		backdrop-filter: blur(10px);
 		border-radius: 3px;
 	}
 
-	.sel-clicky>span {
+	.sel-clicky > span {
 		border: 1px solid var(--color-theme-darkblue);
 		color: var(--color-theme-darkblue);
 	}

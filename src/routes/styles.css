@@ -112,5 +112,4 @@ input, option, select {
 
 g {
 	transition: transform 0.8s;
-	transform: translate(var(--x-off, 0px), var(--y-off, 0px));
 }
