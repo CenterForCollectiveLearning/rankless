@@ -1,6 +1,6 @@
 <script lang="ts">
-	import {getStylesForWords} from '$lib/text-format-util';
-	import {fade} from 'svelte/transition';
+	import { getStylesForWords } from '$lib/text-format-util';
+	import { fade } from 'svelte/transition';
 
 	export let text: string;
 	export let width: number;
@@ -12,7 +12,6 @@
 	export let allowRotation = true;
 	export let fadeMs = 600;
 	export let transMs = 800;
-	export let zIndex: number | 'auto' = 'auto';
 	const baseFontSize = 10;
 
 	$: words = (text || '').split(' ');
@@ -32,10 +31,12 @@
 	$: gstyle = `transform:  matrix(${styles.rotate ? rotMatrix : simpleMatrix}, ${y})`;
 </script>
 
-<g style="z-index: {zIndex}; {gstyle}; transition: all {transMs}ms" transition:fade={{ duration: fadeMs }} x="0">
+<g style="{gstyle}; transition: all {transMs}ms" transition:fade={{ duration: fadeMs }}>
 	{#each words as word, wordInd}
-	<text style=" transform: {styles.translates[wordInd]}; transition: all {transMs}ms"
-		text-anchor="left">{word}</text>
+		<text
+			style=" transform: {styles.translates[wordInd]}; transition: all {transMs}ms"
+			text-anchor="left">{word}</text
+		>
 	{/each}
 </g>
 
