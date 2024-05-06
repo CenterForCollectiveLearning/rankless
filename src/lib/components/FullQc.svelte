@@ -33,7 +33,7 @@
 
 	let svgD2 = 100;
 	let rootD2 = 25;
-	let d2Offset = 39;
+	let d2Offset = (svgD2 - rootD2) / 2;
 	let sideBarD2 = 0;
 
 	let d1TopPadRate = 7;
@@ -299,7 +299,7 @@
 
 <div class="floater sentence-container" style={dBasedStyle( {}, { left: headerShape.x, width: headerShape.width }, {
 	height: headerRate * 0.15, top: headerRate * 0.85 + d1TopPadRate } )}>
-	<p>
+	<p id="num-stat-subtitle">
 		({formatNumber(parseInt(rootAttributes?.meta.papers || '0'), 0)} papers, {formatNumber(
 		parseInt(rootAttributes?.meta.citations || '0'),
 		0
@@ -389,7 +389,12 @@
 	}
 
 	#sentence-starter {
-		font-size: min(1.5rem, 2.3vw);
+		font-size: min(1.5rem, 3.3vw);
+		text-align: center;
+	}
+
+	#num-stat-subtitle {
+		font-size: min(1.1rem, 1.9vw);
 		text-align: center;
 	}
 
