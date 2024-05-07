@@ -117,12 +117,12 @@
 <div class="bstrip">
 	<h1 id="faq">Frequently Asked Questions</h1>
 	<div id="faq-head">
-		<div class="wsized">
-			<p class="faq-p">
+		<div class="btxt">
+			<p>
 				Questions and answers about data sources used, update frequency, filtering, impact
 				measurement, extensions and visualization.
 			</p>
-			<p class="faq-p">
+			<p>
 				We use <a on:click={pickId('data')} href="#data">open, up-to-date data</a>, process it
 				with
 				<a on:click={pickId('impact')} href="#impact">transparent methods</a> and visualize the
