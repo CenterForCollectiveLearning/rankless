@@ -117,7 +117,7 @@
 <div class="bstrip">
 	<h1 id="faq">Frequently Asked Questions</h1>
 	<div id="faq-head">
-		<div class="wsized">
+		<div class="btxt">
 			<p>
 				Questions and answers about data sources used, update frequency, filtering, impact
 				measurement, extensions and visualization.
