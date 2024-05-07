@@ -43,13 +43,13 @@
 	const uLogos = [cclLogo, corvLogo, udtLogo];
 
 	const protraits = [
-		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer'},
-		{src: matePortrait, name: 'Máté Barkóczi', role: 'Designer'},
-		{src: veraPortrait, name: 'Veronika Hamar', role: 'CCL Budapest Executive Director'},
+		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL'},
+		{src: matePortrait, name: 'Máté Barkóczi', role: 'Design Intern, CCL'},
+		{src: veraPortrait, name: 'Veronika Hamar', role: 'Executive Director, CCL'},
 		{
 			src: cesarPortrait,
 			name: 'César A. Hidalgo',
-			role: 'CCL Director',
+			role: 'Director, CCL',
 			href: 'https://cesarhidalgo.com/'
 		}
 	];
