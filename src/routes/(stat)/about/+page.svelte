@@ -40,7 +40,7 @@
 		}
 	});
 
-	const uLogos = [cclLogo, corvLogo, udtLogo];
+	const uLogos = [cclLogo, corvLogo, tseLogo];
 
 	const protraits = [
 		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL'},
@@ -117,7 +117,7 @@
 <div class="bstrip">
 	<h1 id="faq">Frequently Asked Questions</h1>
 	<div id="faq-head">
-		<div class="btxt">
+		<div class="wsized">
 			<p>
 				Questions and answers about data sources used, update frequency, filtering, impact
 				measurement, extensions and visualization.
@@ -263,8 +263,7 @@
 </div>
 <div class="bstrip logo-strip" id="support-strip">
 	<h1>Supported by</h1>
-	<img class="logo" src={euLogo} alt="European Union Logo" />
-	<img class="logo" src={tseLogo} alt="Tse Logo" />
+	<img class="logo" src={euLogo} alt="European Union Logo" style={{width: '400px', height: '400px'}} />
 </div>
 
 <style>
