@@ -9,6 +9,7 @@
 	import euLogo from '$lib/assets/images/icons/eu-logo.png';
 	import eliasLogo from '$lib/assets/images/icons/elias-logo.png';
 	import anitiLogo from '$lib/assets/images/icons/aniti-logo.png';
+	import tseLogo from '$lib/assets/images/icons/tse-logo.png';
 
 	import cesarPortrait from '$lib/assets/images/portraits/cesar.jpg';
 	import endrePortrait from '$lib/assets/images/portraits/endre.jpg';
@@ -39,16 +40,16 @@
 		}
 	});
 
-	const uLogos = [cclLogo, corvLogo, udtLogo];
+	const uLogos = [cclLogo, corvLogo, tseLogo];
 
 	const protraits = [
-		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer'},
-		{src: matePortrait, name: 'Máté Barkóczi', role: 'Designer'},
-		{src: veraPortrait, name: 'Veronika Hamar', role: 'CCL Budapest Executive Director'},
+		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL'},
+		{src: matePortrait, name: 'Máté Barkóczi', role: 'Design Intern, CCL'},
+		{src: veraPortrait, name: 'Veronika Hamar', role: 'Executive Director, CCL'},
 		{
 			src: cesarPortrait,
 			name: 'César A. Hidalgo',
-			role: 'CCL Director',
+			role: 'Director, CCL',
 			href: 'https://cesarhidalgo.com/'
 		}
 	];
@@ -116,12 +117,12 @@
 <div class="bstrip">
 	<h1 id="faq">Frequently Asked Questions</h1>
 	<div id="faq-head">
-		<div class="wsized">
-			<p class="faq-p">
+		<div class="btxt">
+			<p>
 				Questions and answers about data sources used, update frequency, filtering, impact
 				measurement, extensions and visualization.
 			</p>
-			<p class="faq-p">
+			<p>
 				We use <a on:click={pickId('data')} href="#data">open, up-to-date data</a>, process it
 				with
 				<a on:click={pickId('impact')} href="#impact">transparent methods</a> and visualize the
@@ -228,20 +229,18 @@
 				class, where
 				the University of Bologna belongs.
 			</p>
-			<p>
-				For another example 0.31 is the specialization metric for the scholars of the University
-				of
-				Toronto, publishing papers in Chemistry, when the papers are co-authored by scholars at
-				Stanford. This is significantly different than the previous example as <i>p(s)</i> is
-				not the
-				complete set of all citations which the University of Toronto receives, which is over 5
-				million,
-				but only the subset where the papers were co-authored by authors at Stanford, which is
-				about
-				80 thousand, 1295 of which are on chemistry. Also the subject of the metric is
-				chemistry, which
-				is a major concept, a class with 19 elements
-			</p>
+			<script>
+				import Typewriter from './Typewriter.svelte';
+			  </script>
+			  
+			  <p>
+				For another example, 0.31 is the specialization metric for the scholars of the University
+				of Toronto, publishing papers in Chemistrywhen the papers are co-authored by scholars at Stanford. This is significantly different than the previous example as <i>p(s)</i> is
+				not the complete set of all citations which the University of Toronto receives, which is over 5
+				million, but only the subset where the papers were co-authored by authors at Stanford, which is
+				about 80 thousand, 1295 of which are on chemistry. Also the subject of the metric is 
+				<Typewriter text="chemistry" speed={150} />, which is a major concept, a class with 19 elements.
+			  </p>
 			<p class="spec-formula">
 				<SpecConcrete2 />
 			</p>
@@ -253,9 +252,9 @@
 		</AccordionElement>
 	</div>
 </div>
-<div class="bstrip">
+<!--<div class="bstrip">
 	<iframe title="CCL Launch Video" src="https://www.youtube.com/embed/le75gN3pxPk" />
-</div>
+</div> -->
 <div class="bstrip logo-strip">
 	<h1>Created by</h1>
 	{#each uLogos as src}
@@ -264,9 +263,7 @@
 </div>
 <div class="bstrip logo-strip" id="support-strip">
 	<h1>Supported by</h1>
-	<img class="logo" src={euLogo} alt="European Union Logo" />
-	<img class="logo" src={eliasLogo} alt="Elias Logo" />
-	<img class="logo" src={anitiLogo} alt="Aniti Logo" />
+	<img class="logo" src={euLogo} alt="European Union Logo" style={{width: '400px', height: '400px'}} />
 </div>
 
 <style>
