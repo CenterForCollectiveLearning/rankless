@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --host",
+		"ngrok": "ngrok http --domain=stork-settled-spider.ngrok-free.app 5173",
 		"build": "vite build",
 		"preview": "vite preview",
 		"deploy": "echo www.rankless.org > build/CNAME && touch build/.nojekyll && gh-pages -d build -t true -b rankless-page -o rankless",

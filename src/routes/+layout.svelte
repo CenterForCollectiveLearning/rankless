@@ -77,6 +77,14 @@
 		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
 		rel="stylesheet"
 	/>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+		rel="stylesheet"
+	/>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap"
+		rel="stylesheet"
+	/>
 	<title>{APP_NAME}</title>
 </svelte:head>
 
@@ -106,9 +114,9 @@
 				{/if}
 				{#if slimOpened}
 					<div id="slim-drop">
-						<a href={`${base}`}>Home</a>
+						<a href={`${base}/`}>Home</a>
 						<a href={`${base}/about`}>About</a>
-						<a href={`${base}/methods`}>Methods</a>
+						<a href={`${base}/about#faq`}>Methods</a>
 					</div>
 				{/if}
 			</div>
