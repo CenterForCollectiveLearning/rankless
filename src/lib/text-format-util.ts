@@ -6,13 +6,23 @@ export function formatNumber(n: number, maxFix: number = 2) {
     } else if (n < 1) {
         return n.toFixed(Math.min(2, maxFix));
     } else if (n < 10) {
-        return n.toFixed(1);
+        return n.toFixed(maxFix);
     } else {
         return n.toFixed(0);
     }
 }
 
-export function getStylesForWords(words: string[], width: number, height: number, heightMultiplier: number, widthMultiplier: number, baseFontSize: number, leftAligned: boolean, allowRotation: boolean) {
+export function getStylesForWords(
+    words: string[],
+    width: number,
+    height: number,
+    heightMultiplier: number,
+    widthMultiplier: number,
+    baseFontSize: number,
+    leftAligned: boolean,
+    bottomAligned: boolean,
+    allowRotation: boolean
+) {
     const horizontal = formatTextToLinesOneWay(words, width, height, heightMultiplier, widthMultiplier);
     let rotate = false;
     let { lines, fontSize } = horizontal
@@ -28,15 +38,17 @@ export function getStylesForWords(words: string[], width: number, height: number
 
     const translates = [];
     const scale = fontSize / baseFontSize;
+    const nLines = lines.length;
+    let bottomPad = 0;
+    if (!bottomAligned) {
+        bottomPad += (height / scale - (nLines + (nLines - 1) * (heightMultiplier - 1)) * baseFontSize) / 2;
+    }
     for (const [lineInd, line] of lines.entries()) {
-        const lineDispInd = lineInd - lines.length + 1;
+        const y = (lineInd - nLines + 1) * heightMultiplier * baseFontSize - bottomPad;
         const lineBaseX = leftAligned ? 0 : - lineLen(line.words) * widthMultiplier * baseFontSize / 2
         let wordStartInd = 0
         for (const word of line.words) {
-            const y = lineDispInd * heightMultiplier * baseFontSize;
             const x = lineBaseX + wordStartInd * widthMultiplier * baseFontSize;
-
-
             translates.push(`translate(${x}px, ${y}px)`);
             wordStartInd += word.length + 1;
         }

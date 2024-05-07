@@ -1,29 +1,29 @@
-import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, LevelVisual, EmbeddedNode, WeightedNode, TreeGen, OMap, SpecBaseOptions } from './tree-types'
+import type { QcSpec, DerivedLevelInfo, ControlSpec, BareNode, AttributeLabels, PathInTree, TreeInfo, EmbeddedNode, WeightedNode, TreeGen, OMap } from './tree-types'
 import { DEFAULT_LIMIT_N } from './constants';
-import { DEFAULT_SPEC_BASES, getSpecMetricObject } from './metric-calculation';
+import { getSpecMetricObject } from './metric-calculation';
 
-export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'volume' }
+export const DEFAULT_CONTROL_SPEC: ControlSpec = { include: [], exclude: [], limit_n: DEFAULT_LIMIT_N, show_top: true, size_base: 'specialization' }
 
 type LevelNodeDescription = { path: PathInTree, node: WeightedNode, derivedWeight: number };
 
 
+export function pruneTree(tree: BareNode, depth: number): BareNode {
+    if (depth == 0) {
+        return { children: {} }
+    }
+    return { children: Object.fromEntries(Object.entries(tree.children || {}).map(([k, v]) => [k, pruneTree(v, depth - 1)])) }
+}
+
 export function deriveVisibleTree(
-    rootId: string,
     root: WeightedNode,
     controls: ControlSpec[],
     selections: BareNode,
     attributeLabels: AttributeLabels,
     qcSpec: QcSpec,
-    specBaselineOptions: SpecBaseOptions
 ): TreeInfo {
 
-    const specCalcFun = (node: WeightedNode, path: PathInTree) => {
-        const entityKind = getEntityKind(path, qcSpec);
-        return getSpecMetricObject(root, DEFAULT_SPEC_BASES[entityKind], path, rootId, qcSpec, specBaselineOptions, attributeLabels).specMetric;
-    }
 
-
-    const allLevelNodes = flatFilter(root, controls, selections, specCalcFun);
+    const allLevelNodes = flatFilter(root, controls, selections, qcSpec, attributeLabels);
 
     const meta: DerivedLevelInfo[] = [{ totalNodes: 1, totalWeight: root.weight }]
     const tree: EmbeddedNode = {
@@ -35,14 +35,12 @@ export function deriveVisibleTree(
         totalOffsetOnLevel: { weight: 0, rank: 0 },
         totalOffsetAmongSiblings: { weight: 0, rank: 0 },
         scaleEnds: { min: 0, max: 1, mid: 0.5 },
-        specMetric: { rawMetric: 0, normalizedMetric: 0 }
     }
 
     const getParent = (n: LevelNodeDescription) => (getNodeByPath(n.path.slice(0, -1), tree))
     const getParentPathStr = (n: LevelNodeDescription) => (n.path.slice(0, -1).join('-'))
 
-    for (const [levelN, levelDesc] of allLevelNodes.slice(1).entries()) {
-        const controlSpec = controls[levelN];
+    for (const levelDesc of allLevelNodes.slice(1)) {
         let levelWeight = 0;
         let levelRank = 0;
         const childrenCounts: OMap<number> = {};
@@ -52,7 +50,7 @@ export function deriveVisibleTree(
             const lParent = getParent(l);
             const rParent = getParent(r);
             if (lParent?.totalOffsetOnLevel.rank == rParent?.totalOffsetOnLevel.rank) {
-                const order = l.derivedWeight - r.derivedWeight;
+                const order = r.derivedWeight - l.derivedWeight;
                 if (order != 0) return order;
                 return lastE(l.path) > lastE(r.path) ? -1 : 1
             }
@@ -74,9 +72,6 @@ export function deriveVisibleTree(
                 const scaleMin = parent.scaleEnds.min + (rank || 0) * scaleStep;
                 const scaleMax = scaleMin + scaleStep;
 
-                const specMetric = (controlSpec.size_base == 'specialization') ?
-                    { rawMetric: nodeDesc.node.weight, normalizedMetric: 0 } :
-                    { rawMetric: 0, normalizedMetric: 0 }
 
                 parent.children[childId] = {
                     name: getChildName(nodeDesc.path, attributeLabels, qcSpec),
@@ -87,7 +82,6 @@ export function deriveVisibleTree(
                     totalOffsetOnLevel: { weight: levelWeight, rank: levelRank },
                     totalOffsetAmongSiblings: { weight: parent.childrenSumWeight, rank },
                     scaleEnds: { min: scaleMin, max: scaleMax, mid: (scaleMax + scaleMin) / 2 },
-                    specMetric
                 };
                 parent.childrenSumWeight += nodeDesc.derivedWeight;
                 levelWeight += nodeDesc.derivedWeight;
@@ -102,7 +96,7 @@ export function deriveVisibleTree(
 
 
 
-function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: BareNode, specCalcFun: (n: WeightedNode, p: PathInTree) => number): LevelNodeDescription[][] {
+function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: BareNode, qcSpec: QcSpec, attributeLabels: AttributeLabels): LevelNodeDescription[][] {
     //on each level: (excluded ones should already not be there)
     //collect selected ones
     //collect the spec included ones
@@ -110,17 +104,27 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
     //go while unfilled
 
     const outNodes: LevelNodeDescription[][] = [[{ path: [], node: root, derivedWeight: 0 }]]
+    if (qcSpec == undefined) return outNodes;
+    let denominatorBreakdownResolver = qcSpec.bifurcations[0].resolver_id;
+    let denominatorIndex = -1;
+
+    function getDenomWeight(path: PathInTree) {
+        return getNodeByPath(path.slice(0, denominatorIndex + 1), root)?.weight || 0
+    }
 
     LevelLoop:
-    for (let i = 0; i < controls.length; i++) {
+    for (let i = 0; i < Math.min(controls.length, qcSpec.bifurcations.length); i++) {
         const controlSpec = controls[i];
         let remainingCount = controlSpec.limit_n;
         const lastLevelNodes = outNodes[i];
         const thisLevelNodes: LevelNodeDescription[] = []
         const includedPaths = new Set();
+        const entityKind = qcSpec.bifurcations[i].attribute_kind;
+        const eNum = Object.keys(attributeLabels[entityKind]).length
 
         const weightDerivation = (controlSpec.size_base == 'volume') ?
-            (node: WeightedNode) => (node.weight) : specCalcFun;
+            (node: WeightedNode) => (node?.weight || 0) :
+            (node: WeightedNode, childId: string, denominatorWeight: number) => (getSpecMetricObject(node, denominatorWeight, eNum, entityKind, attributeLabels, childId, qcSpec.bifurcations[i].description).specMetric);
 
         const isBetterExtreme = (controlSpec.show_top) ?
             (l: LevelNodeDescription, r: LevelNodeDescription) => (l.derivedWeight - r.derivedWeight) :
@@ -130,9 +134,9 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
         const pushFun = (parent: LevelNodeDescription, childId: string) => {
             if (controlSpec.exclude.includes(childId)) return;
             const path = [...parent.path, childId];
-            const node = parent.node.children[childId];
+            const node = (parent.node.children || {})[childId];
             includedPaths.add(path.join("-"));
-            thisLevelNodes.push({ node, path, derivedWeight: weightDerivation(node, path) })
+            thisLevelNodes.push({ node, path, derivedWeight: weightDerivation(node, childId, getDenomWeight(path)) })
             remainingCount--;
         }
         const selectedOnLastLevel = lastLevelNodes.filter((e) => (isPathInTree(e.path, selections)))
@@ -165,11 +169,12 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
             const numFromThisLevel = Math.round(remainingCount / (selectedOnLastLevel.length - i));
             if (numFromThisLevel == 0) continue;
             const addFromParent: LevelNodeDescription[] = []
+            const denomWeight = getDenomWeight(possibleParent.path);
             for (const [childId, childNode] of Object.entries(possibleParent.node.children || {})) {
                 if (controlSpec.exclude.includes(childId)) continue;
                 const childPath = [...possibleParent.path, childId];
                 if (includedPaths.has(childPath.join("-"))) continue;
-                const childLevelNodeDesc = { node: childNode, path: childPath, derivedWeight: weightDerivation(childNode, childPath) }
+                const childLevelNodeDesc = { node: childNode, path: childPath, derivedWeight: weightDerivation(childNode, childId, denomWeight) }
                 if (addFromParent.length < numFromThisLevel) {
                     insertKeepingOrder(childLevelNodeDesc, addFromParent, isBetterExtreme)
                 } else {
@@ -182,23 +187,15 @@ function flatFilter(root: WeightedNode, controls: ControlSpec[], selections: Bar
             addFromParent.map((v) => thisLevelNodes.push(v))
             remainingCount -= addFromParent.length;
         }
+        if (qcSpec.bifurcations[i + 1]?.resolver_id != denominatorBreakdownResolver) {
+            denominatorBreakdownResolver = qcSpec.bifurcations[i + 1]?.resolver_id;
+            denominatorIndex = i;
+        }
     }
     return outNodes;
 }
 
 
-export function getLevelVisuals(visInfo: TreeInfo, svgHeight: number, expandedControlInd: number | undefined): LevelVisual {
-    const out = [];
-    const levelCount = Math.max(((visInfo?.meta || []).length || 0) - 1, 1);
-    let topOffset = 0;
-    const stepSize = (expandedControlInd === undefined) ? svgHeight / levelCount : svgHeight / levelCount / 2;
-    for (let i = 0; i < levelCount; i++) {
-        const totalSize = (expandedControlInd == i) ? svgHeight / 2 + stepSize : stepSize
-        out.push({ totalSize, topOffset });
-        topOffset += totalSize;
-    }
-    return out;
-}
 
 export function insertKeepingOrder<T>(elem: T, arr: T[], f: (l: T, r: T) => number) {
     //0 if equal, -x if l is 'less desirable' 

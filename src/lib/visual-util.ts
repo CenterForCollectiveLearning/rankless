@@ -1,3 +1,4 @@
+
 export type Point = { x: number, y: number }
 
 export const pinRange = (sY: number | undefined, b: number, e: number, offset: number): number =>
@@ -18,6 +19,28 @@ export function getSankeyPath(cTop: Point, cBot: Point, widths: { parent: number
 
 }
 
+export function getHorizolntalSankeyPath(cLeft: Point, cRight: Point, sizes: { parent: number, child: number }, rightStretch: number = 0, leftStretch: number = 0) {
+
+    const xMid = (cLeft.x + cRight.x) / 2
+    const downC = [xMid, cLeft.y, xMid, cRight.y, cRight.x, cRight.y].join(",");
+    const ceStart = cLeft.y + sizes.parent
+    const ceEnd = cRight.y + sizes.child
+    const upC = [xMid, ceEnd, xMid, ceStart, cLeft.x, ceStart].join(",");
+
+    const downWardP = `M${cLeft.x} ${cLeft.y} C${downC} h ${rightStretch}`;
+    const upWardP = `h ${-rightStretch} C${upC} h ${-leftStretch}`;
+    return `${downWardP} v ${sizes.child} ${upWardP} v ${-sizes.parent}z`;
+
+}
+
+export function flipIf(shapeObj: { x: number, y: number, height: number, width: number }, flipper: boolean) {
+    if (flipper) {
+        return {
+            x: shapeObj.y, y: shapeObj.x, width: shapeObj.height, height: shapeObj.width,
+        }
+    }
+    return shapeObj
+}
 
 // -600 -300 1600 1700
 export const thinFlowerPaths = [

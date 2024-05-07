@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { handleStore } from '$lib/tree-loading';
-	import { formatNumber } from '$lib/text-format-util';
-	import { getTopFzfInsts } from '$lib/search-util';
-	import type { SelectionOption } from '$lib/tree-types';
-	import { INSTITUTION_TYPE } from '$lib/constants';
+	import {base} from '$app/paths';
+	import {goto} from '$app/navigation';
+	import {onMount} from 'svelte';
+	import {handleStore} from '$lib/tree-loading';
+	import {formatNumber} from '$lib/text-format-util';
+	import {getTopFzfInsts} from '$lib/search-util';
+	import type {AttributeLabels, SelectionOption} from '$lib/tree-types';
+	import {INSTITUTION_TYPE} from '$lib/constants';
 
 	export let resultsHidden: boolean;
 	export let searchTerm: string;
@@ -14,34 +14,41 @@
 	let instOptions: SelectionOption[] = [];
 
 	onMount(() => {
-		handleStore('root-descriptions', (jsv) => {
-			// @ts-ignore
-			instOptions = jsv[INSTITUTION_TYPE];
+		handleStore('attribute-statics', (jsv: AttributeLabels) => {
+			instOptions = Object.entries(jsv[INSTITUTION_TYPE]).map(([id, v]) => {
+				return {id, name: v.name, meta: v.meta};
+			});
 		});
 	});
 
-	function onChange(e: SelectionOption | undefined) {
+	function onChange(e: {semanticId: string} | undefined) {
 		if (e != undefined) {
-			goto(`${base}/view/${INSTITUTION_TYPE}/${e.id}`); //TODO this is capitalized!!
+			let rootType = INSTITUTION_TYPE;
+			goto(`${base}/${rootType}/${e.semanticId}`);
 		}
 	}
-	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 6);
+	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 8);
+
+	function keyBind(key: {key: string}) {
+		if (key.key == 'Escape') {
+			resultsHidden = true;
+		}
+	}
 </script>
 
+<svelte:window on:keydown={keyBind} />
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="search-results" style="display: {resultsHidden ? 'none' : 'flex'};">
-	<span id="result-closer" on:click={() => (resultsHidden = true)}>&#10006;</span>
+	<span id="result-closer" on:click={()=> (resultsHidden = true)}>&#10006;</span>
 	{#each searchResults as searchResult}
-		<div on:click={() => onChange(searchResult)} class="result-card">
-			<h3 style="font-size: {searchResult.name.length > 60 ? 1.3 : 1.9}em;">
-				{searchResult.name}
-			</h3>
-			<span class="subtitle"
-				>{formatNumber(searchResult.papers)} papers,
-				{formatNumber(searchResult.citations)} citations</span
-			>
-		</div>
+	<div on:click={()=> onChange(searchResult)} class="result-card">
+		<h3 style="font-size: {searchResult.name.length > 50 ? 1.2 : 1.45}em;">
+			{searchResult.name}
+		</h3>
+		<span class="subtitle">{formatNumber(searchResult.papers)} papers,
+			{formatNumber(searchResult.citations)} citations</span>
+	</div>
 	{/each}
 </div>
 
@@ -75,7 +82,7 @@
 		min-width: 240px;
 		background-color: var(--color-theme-white);
 		border: solid var(--color-theme-darkblue) 1px;
-		box-shadow: 15px 15px 80px var(--color-theme-darkgrey3);
+		box-shadow: 8px 8px 13px var(--color-theme-darkgrey3);
 		border-radius: 10px;
 		margin: 40px;
 		margin-bottom: 20px;
@@ -94,7 +101,7 @@
 		transform: translateY(-10px);
 		background-color: var(--color-theme-lightgrey);
 		color: var(--color-theme-darkblue);
-		box-shadow: 5px 5px 20px var(--color-theme-darkgrey);
+		box-shadow: 3px 3px 13px var(--color-theme-darkgrey);
 	}
 
 	.subtitle {

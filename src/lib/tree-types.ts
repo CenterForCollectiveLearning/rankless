@@ -1,4 +1,4 @@
-import type { EntityType, GLOBAL_BASE_TYPE } from "./constants";
+import type { EntityType } from "./constants";
 
 export type OMap<T> = Record<string, T>;
 export type PathInTree = string[];
@@ -7,12 +7,10 @@ export type TreeGen<T> = T & { children?: OMap<TreeGen<T>> };
 export type SelectionOption = {
     name: string;
     id: string;
-    meta?: string;
+    meta?: OMap<string>;
 };
 
 export type QcSpec = {
-    title: string;
-    description: string;
     root_entity_type: string;
     bifurcations: Bifurcation[];
 };
@@ -20,17 +18,14 @@ export type QcSpec = {
 export type Bifurcation = {
     attribute_kind: EntityType;
     resolver_id: string;
-    control_format_str: string;
     description: string;
 };
 
 
 export type QcSpecMap = OMap<QcSpec>;
 
-type AlGen<T> = OMap<OMap<{ name: string; meta: T }>>;
-
-export type AttributeLabelsRaw = AlGen<string>;
-export type AttributeLabels = AlGen<OMap<number | object>>;
+export type AttributeLabel = { name: string; spec_baselines: OMap<number>; meta: OMap<string> };
+export type AttributeLabels = OMap<OMap<AttributeLabel>>;
 
 
 export type BareNode = TreeGen<object>;
@@ -44,7 +39,6 @@ export type EmbeddedNode = TreeGen<{
     totalOffsetAmongSiblings: OffsetInfo;
     isSelected: boolean;
     scaleEnds: { min: number; max: number; mid: number };
-    specMetric: { rawMetric: number; normalizedMetric: number };
 }>;
 
 
@@ -55,16 +49,13 @@ type SizeBaseKind = 'volume' | 'specialization';
 
 export type TreeInteractionEvent = { path: PathInTree; action: InteractionKind, topLeftCorner: { x: number, y: number } };
 
-export type IndexEvent = { ind: number };
 
 export type DerivedLevelInfo = { totalWeight: number; totalNodes: number };
 
 export type TreeInfo = { tree: EmbeddedNode; meta: DerivedLevelInfo[] };
 export type ControlSpec = { exclude: string[]; include: string[]; limit_n: number; show_top: boolean; size_base: SizeBaseKind };
 
-export type LevelVisElem = { totalSize: number; topOffset: number };
-export type LevelVisual = LevelVisElem[];
+export type BreakdownOptions = OMap<{ children: BreakdownOptions, qcSpecs: string[] }>;
+export type SelectedBreakdowns = string[];
+export type LevelOutSpec = { totalSize: number; topOffset: number, isVisible: boolean, levelOptions: string[] };
 
-export type SpecializationBasis = { basis: EntityType | typeof GLOBAL_BASE_TYPE; hierarchy: EntityType | typeof GLOBAL_BASE_TYPE };
-export type SomeSpecBaselineMap = OMap<OMap<OMap<number> | number> | number>;
-export type SpecBaseOptions = OMap<SomeSpecBaselineMap>;
