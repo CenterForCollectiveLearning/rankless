@@ -31,13 +31,7 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<g
-	on:mousedown={dragOn}
-	on:mouseup={dragOff}
-	on:mousemove={moveHandler}
-	on:mouseleave={dragOff}
-	style="--x-off: 0px; --y-off: 0px"
->
+<g on:mousedown={dragOn} on:mouseup={dragOff} on:mousemove={moveHandler} on:mouseleave={dragOff}>
 	<rect {height} rx={height / 2} {width} />
 
 	<circle {cx} {r} cy={height / 2} />

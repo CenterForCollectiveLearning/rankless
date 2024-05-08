@@ -8,7 +8,7 @@ C_{i,s}/C_{i,p(s)}
 }
 }
 -->
-<svg xmlns="http://www.w3.org/2000/svg" width="414px" height="112px" viewBox="0 -1563.5 11434.6 3144.4"
+<svg xmlns="http://www.w3.org/2000/svg" width="300px" height="112px" viewBox="0 -1563.5 11434.6 3144.4"
 	xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">
 	<defs>
 		<path id="MJX-74-TEX-I-1D446"

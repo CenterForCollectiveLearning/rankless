@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {slide} from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 
 	export let title: string;
 	export let id: string;
@@ -16,6 +16,8 @@
 	$: isSelected = selectedId == id;
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions-->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div {id} on:click={onClick} class="accord-header">
 	<svg viewBox="-10 -10 20 20">
 		<g style="transform: {isSelected ? 'rotate(45deg)' : 'rotate(0deg)'}">
@@ -26,9 +28,9 @@
 	<h3 style="color: {isSelected ? 'var(--color-theme-darkblue)' : ''};">{title}</h3>
 </div>
 {#if isSelected}
-<p transition:slide={{ duration: 500 }}>
-	<slot />
-</p>
+	<p transition:slide={{ duration: 500 }}>
+		<slot />
+	</p>
 {/if}
 <hr />
 

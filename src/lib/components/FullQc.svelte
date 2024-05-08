@@ -35,6 +35,7 @@
 	let rootD2 = 25;
 	let d2Offset = (svgD2 - rootD2) / 2;
 	let sideBarD2 = 0;
+	let controlPad = 6;
 
 	let d1TopPadRate = 7;
 	let d1BottomPadRate = 18;
@@ -307,12 +308,12 @@
 	</p>
 </div>
 
-<div class="floater" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left: 3, width:
-	d2Offset * 0.7 }, {} )}>
+<div class="floater" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left: controlPad,
+	width: d2Offset * 0.7 }, {} )}>
 	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
 </div>
-<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { right: 3,
-	width: d2Offset * 0.7 }, {} )}>
+<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { right:
+	controlPad, width: d2Offset * 0.7 }, {} )}>
 	<div id="spec-container">
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
@@ -342,7 +343,7 @@
 {/if}
 {#if showSpecInfoHover}
 <div class="floater hoverover" id="spec-hover" style={dBasedStyle( { top: d1PadSize + headerShape.height }, { left:
-	d2Offset + headerShape.width, width: headerShape.width * 1.0 }, {} )}>
+	d2Offset + headerShape.width * 0.2, width: headerShape.width * 1.6 }, {} )}>
 	Specialization is calculated using the expected prevelance of a country, source, or concept,
 	and comparing it to the one present in the current breakdown flow. If it is switched off, the
 	sheer volume of citations is considered.
@@ -360,8 +361,8 @@
 	}
 
 	#spec-label {
-		font-size: 0.7rem;
-		margin: 9px;
+		font-size: min(0.7rem, 2.2vw);
+		margin: min(9px, 1.2vw);
 		cursor: pointer;
 	}
 

@@ -175,74 +175,78 @@
 		</AccordionElement>
 
 		<AccordionElement bind:selectedId title="How do you measure specialization?" id="spec">
-			<p>
-				We use a modified version of the <a
-					href="https://en.wikipedia.org/wiki/Revealed_comparative_advantage">Revealed
-					Comparative Advantage (RCA)</a>
-				metric introduced by the Hungarian economist Bela Balassa. RCA is the ratio between the
-				observed
-				and expected observations in a dataset. It is also known as the Location Quotients (LQ)
-				in urban
-				planning and economic geography or as Lift in data mining and computer science.
-			</p>
-			<p>Precisely, specialization is measured using the following formula:</p>
-			<p class="spec-formula">
-				<SpecCalcMath />
-			</p>
-			<p>
-				Where <i>S<sub>i,s</sub></i> is the specialization metric corresponding to the <i>s</i>
-				subset in the tree of <i>i</i> entity (say an institution).
-				<i>C<sub>i,s</sub></i> is the number of citations corresponding to the <i>s</i>
-				subset in the tree of <i>i</i> entity, with <i>I</i> being the set of all entities in
-				the
-				particular class (in our case, all institutions).
-				<i>p(s)</i> is the parent set of <i>s</i> subset, meaning the first complete aggregation
-				in
-				the tree above <i>s</i>.
-				<i>U<sub>s</sub></i> is a correctional term, to avoid outliers. It is {ALPHA} ×
-				1/<i>N<sub>s</sub></i>
-				where <i>N<sub>s</sub></i> is the number of distinct elements in the subset
-			</p>
-			<p>
-				For one example, Corvinus University has 25.4k citations in our release database, and
-				has a
-				specialization metric of 2.12 (which is considered high) for the subset of being cited
-				by
-				the University of Bologna. This comes from
-			</p>
-			<p class="spec-formula">
-				<SpecConcrete />
-			</p>
-			<p>
-				as <i>p(s)</i> is the set of all citations, so the corresponding citation count is all
-				of them
-				at 25,401, with 129 of them belonging to the subset of the University of Bologna. 0.0023
-				is the
-				ratio that is expected due to the size and research output of the University of Bologna.
-				The
-				correction term is drawing the ratio toward zero to avoid outliers for subsets with very
-				low
-				expected citation counts, with 6587 being the number of entities in the institution
-				class, where
-				the University of Bologna belongs.
-			</p>
-			<p>
-				For another example, 0.31 is the specialization metric for the scholars of the
-				University of
-				Toronto, publishing papers in Chemistrywhen the papers are co-authored by scholars at
-				Stanford. This is significantly different than the previous example as <i>p(s)</i> is
-				not the
-				complete set of all citations which the University of Toronto receives, which is over 5
-				million,
-				but only the subset where the papers were co-authored by authors at Stanford, which is
-				about
-				80 thousand, 1295 of which are on chemistry. Also the subject of the metric is
-				cehmistry, which
-				is a major concept, a class with 19 elements.
-			</p>
-			<p class="spec-formula">
-				<SpecConcrete2 />
-			</p>
+			<div id="faq-explanation">
+				<p>
+					We use a modified version of the <a
+						href="https://en.wikipedia.org/wiki/Revealed_comparative_advantage">Revealed
+						Comparative Advantage (RCA)</a>
+					metric introduced by the Hungarian economist Bela Balassa. RCA is the ratio
+					between the observed
+					and expected observations in a dataset. It is also known as the Location
+					Quotients (LQ) in
+					urban planning and economic geography or as Lift in data mining and computer
+					science.
+				</p>
+				<p>Precisely, specialization is measured using the following formula:</p>
+				<p class="spec-formula">
+					<SpecCalcMath />
+				</p>
+				<p>
+					Where <i>S<sub>i,s</sub></i> is the specialization metric corresponding to the
+					<i>s</i>
+					subset in the tree of <i>i</i> entity (say an institution).
+					<i>C<sub>i,s</sub></i> is the number of citations corresponding to the <i>s</i>
+					subset in the tree of <i>i</i> entity, with <i>I</i> being the set of all
+					entities in the
+					particular class (in our case, all institutions).
+					<i>p(s)</i> is the parent set of <i>s</i> subset, meaning the first complete
+					aggregation
+					in the tree above <i>s</i>.
+					<i>U<sub>s</sub></i> is a correctional term, to avoid outliers. It is {ALPHA} ×
+					1/<i>N<sub>s</sub></i>
+					where <i>N<sub>s</sub></i> is the number of distinct elements in the subset
+				</p>
+				<p>
+					For one example, Corvinus University has 25.4k citations in our release
+					database, and has
+					a specialization metric of 2.12 (which is considered high) for the subset of
+					being cited
+					by the University of Bologna. This comes from
+				</p>
+				<p class="spec-formula">
+					<SpecConcrete />
+				</p>
+				<p>
+					as <i>p(s)</i> is the set of all citations, so the corresponding citation count
+					is all of them
+					at 25,401, with 129 of them belonging to the subset of the University of
+					Bologna. 0.0023 is
+					the ratio that is expected due to the size and research output of the University
+					of Bologna.
+					The correction term is drawing the ratio toward zero to avoid outliers for
+					subsets with very
+					low expected citation counts, with 6587 being the number of entities in the
+					institution class,
+					where the University of Bologna belongs.
+				</p>
+				<p>
+					For another example, 0.31 is the specialization metric for the scholars of the
+					University
+					of Toronto, publishing papers in Chemistrywhen the papers are co-authored by
+					scholars at
+					Stanford. This is significantly different than the previous example as
+					<i>p(s)</i> is not the complete set of all citations which the University of
+					Toronto receives,
+					which is over 5 million, but only the subset where the papers were co-authored
+					by authors at
+					Stanford, which is about 80 thousand, 1295 of which are on chemistry. Also the
+					subject of the
+					metric is cehmistry, which is a major concept, a class with 19 elements.
+				</p>
+				<p class="spec-formula">
+					<SpecConcrete2 />
+				</p>
+			</div>
 		</AccordionElement>
 
 		<AccordionElement bind:selectedId title="What kind of visualization engine do you use?" id="viz">
@@ -313,6 +317,11 @@
 		justify-content: center;
 	}
 
+	#faq-explanation>p {
+		font-size: 1rem;
+		font-weight: 100;
+	}
+
 	.spec-formula {
 		width: 100%;
 		display: flex;
@@ -323,12 +332,6 @@
 		width: 1000px;
 		max-width: 90vw;
 		margin-bottom: 40px;
-	}
-
-	.faq-p {
-		text-align: left;
-		font-size: 1.5rem;
-		max-width: 90vw;
 	}
 
 	.btxt {
@@ -372,11 +375,5 @@
 		text-align: center;
 		margin-bottom: 0px;
 		margin-top: 10px;
-	}
-
-	.faq-p>a {
-		text-decoration: none;
-		font-weight: 600;
-		color: rgb(var(--color-range-25));
 	}
 </style>
