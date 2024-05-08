@@ -1,6 +1,7 @@
 <script lang="ts">
-	import {base} from '$app/paths';
-	import {APP_NAME} from '$lib/constants';
+	import { base } from '$app/paths';
+	import TextedLogo from '$lib/components/TextedLogo.svelte';
+	import { APP_NAME } from '$lib/constants';
 	const year = new Date().getFullYear();
 </script>
 
@@ -9,8 +10,8 @@
 		<slot />
 	</div>
 	<div id="main-foot">
-		<div id="foot-r">{APP_NAME} by CCL @ {year}</div>
-		<div id="foot-r"><a href={base + '/about#contact' }>Contact</a></div>
+		<TextedLogo />
+		<div id="foot-r"><a href={base + '/about#contact'}>Contact</a></div>
 	</div>
 </div>
 

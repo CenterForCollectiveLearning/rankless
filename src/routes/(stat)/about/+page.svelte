@@ -4,11 +4,8 @@
 
 	import cclLogo from '$lib/assets/images/icons/ccl-logo.png';
 	import corvLogo from '$lib/assets/images/icons/corv-logo.png';
-	import udtLogo from '$lib/assets/images/icons/udt-logo.png';
 
 	import euLogo from '$lib/assets/images/icons/eu-logo.png';
-	import eliasLogo from '$lib/assets/images/icons/elias-logo.png';
-	import anitiLogo from '$lib/assets/images/icons/aniti-logo.png';
 	import tseLogo from '$lib/assets/images/icons/tse-logo.png';
 
 	import cesarPortrait from '$lib/assets/images/portraits/cesar.jpg';
@@ -44,7 +41,7 @@
 
 	const protraits = [
 		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL'},
-		{src: matePortrait, name: 'Máté Barkóczi', role: 'Design Intern, CCL'},
+		{src: matePortrait, name: 'Máté Barkóczi', role: 'Designer, CCL'},
 		{src: veraPortrait, name: 'Veronika Hamar', role: 'Executive Director, CCL'},
 		{
 			src: cesarPortrait,
@@ -53,9 +50,6 @@
 			href: 'https://cesarhidalgo.com/'
 		}
 	];
-
-	let w = 40;
-	let h = w / 2;
 </script>
 
 <h1>About</h1>
@@ -65,10 +59,9 @@
 	Rankless is an experimental data visualization project that allows users to interactively explore
 	the impact of thousands of universities. It is built on the idea that universities generate impact
 	that is specific to a geography and to certain topics, and that rankings obscure that impact by
-	reducing it to a single dimension. We believe that universities leave a nuanced imprint that
-	rankings fail to consider, tied to a university’s geographic location and areas of expertise. By
-	transcending rankings, we highlight a university’s multidimensional impact by showing you who they
-	work with and who cites them. To understand more, sometimes, we need to rank less.
+	reducing it to a single dimension. By transcending rankings, we highlight a university’s
+	multidimensional impact by showing you who they work with and who cites them. To understand more,
+	sometimes, we need to rank less.
 </p>
 
 <h1>Our Team</h1>
@@ -97,22 +90,26 @@
 </div>
 <div class="btxt">
 	<p>
-		The group is part of the <a href="https://centerforcollectivelearning.org/">Center for Collective
-			Learning</a>
-		research group. Founded in 2010 by Professor Cesar Hidalgo, the group actively contributes to the
-		development of various areas, including economic complexity, the use of crowdsourcing and computer
-		vision methods to understand the physical qualities of cities, and the creation of digital democracy
-		platforms.
+		The <a href="https://centerforcollectivelearning.org/">Center for Collective Learning</a>
+		(CCL) is an interdisciplinary research laboratory with offices in Toulouse, France and Budapest,
+		Hungary. For more than a decade, CCL has advanced the state of the art in economic development, data
+		visualization, and applications of artificial intelligence. Previous data visaualization projects
+		by members of CCL include
+		<a href="https://oec.world/en">The Observatory of Economic Complexity</a>,
+		<a href="https://pantheon.world/">Pantheon</a>, and <a href="https://datausa.io/">Data USA</a>,
+		among dozens of others.
 	</p>
 	<p>
-		The Center for Collective Learning is now based at the Artificial and Natural Intelligence
-		Institute (ANITI) at the University of Toulouse and the Corvinus Institute for Advanced Studies
-		(CIAS) at Corvinus University in Budapest. It is supported by several European projects,
-		including an ERA Chair, the European Lighthouse on Artificial Intelligence for Sustainability
-		(ELIAS), and the ObsSea4Clim (Horizon) Ocean Observatory
+		Rankless was created at the Center for Collective Learning at the Corvinus Institute for
+		Advanced Studies (CIAS) at Corvinus University in Budapest. This project was supported by the
+		<a href="https://cordis.europa.eu/project/id/101086712">Learn Data ERA Chair</a> from the European
+		Research Executive Agency.
 	</p>
 	<h1 id="contact">Contact</h1>
-	<p>You can reach us by contacting Veronika directly @ veronika.hamar@uni-corvinus.hu</p>
+	<p>
+		You can reach us by contacting Veronika and Endre directly @
+		rankless@&#8203;centerforcollectivelearning.org
+	</p>
 </div>
 <div class="bstrip">
 	<h1 id="faq">Frequently Asked Questions</h1>
@@ -229,18 +226,20 @@
 				class, where
 				the University of Bologna belongs.
 			</p>
-			<script>
-				import Typewriter from './Typewriter.svelte';
-			  </script>
-			  
-			  <p>
-				For another example, 0.31 is the specialization metric for the scholars of the University
-				of Toronto, publishing papers in Chemistrywhen the papers are co-authored by scholars at Stanford. This is significantly different than the previous example as <i>p(s)</i> is
-				not the complete set of all citations which the University of Toronto receives, which is over 5
-				million, but only the subset where the papers were co-authored by authors at Stanford, which is
-				about 80 thousand, 1295 of which are on chemistry. Also the subject of the metric is 
-				<Typewriter text="chemistry" speed={150} />, which is a major concept, a class with 19 elements.
-			  </p>
+			<p>
+				For another example, 0.31 is the specialization metric for the scholars of the
+				University of
+				Toronto, publishing papers in Chemistrywhen the papers are co-authored by scholars at
+				Stanford. This is significantly different than the previous example as <i>p(s)</i> is
+				not the
+				complete set of all citations which the University of Toronto receives, which is over 5
+				million,
+				but only the subset where the papers were co-authored by authors at Stanford, which is
+				about
+				80 thousand, 1295 of which are on chemistry. Also the subject of the metric is
+				cehmistry, which
+				is a major concept, a class with 19 elements.
+			</p>
 			<p class="spec-formula">
 				<SpecConcrete2 />
 			</p>
@@ -263,7 +262,7 @@
 </div>
 <div class="bstrip logo-strip" id="support-strip">
 	<h1>Supported by</h1>
-	<img class="logo" src={euLogo} alt="European Union Logo" style={{width: '400px', height: '400px'}} />
+	<img class="logo" src={euLogo} alt="European Union Logo" style="width: 320px; margin-bottom: 20px;" />
 </div>
 
 <style>
@@ -275,6 +274,8 @@
 
 	h2 {
 		text-align: center;
+		padding-right: 15px;
+		padding-left: 15px;
 	}
 
 	p {
@@ -283,14 +284,6 @@
 		max-width: 1180px;
 		margin-left: auto;
 		margin-right: auto;
-	}
-
-	iframe {
-		width: 800px;
-		max-width: 90%;
-		height: 400px;
-		margin-top: 70px;
-		margin-bottom: 40px;
 	}
 
 	a {
@@ -343,7 +336,7 @@
 		text-align: justify;
 		padding-left: 35px;
 		padding-right: 35px;
-		margin-top: 120px;
+		margin-top: 100px;
 		margin-bottom: 60px;
 		color: var(--color-theme-darkgrey);
 	}

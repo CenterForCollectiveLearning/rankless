@@ -7,7 +7,7 @@
 	import {afterNavigate} from '$app/navigation';
 	import {onMount} from 'svelte';
 	import {parse} from 'platform';
-	import {fade} from 'svelte/transition';
+	import {blur, fade, slide} from 'svelte/transition';
 
 	let hPen = 0;
 
@@ -19,22 +19,11 @@
 			hPen = 10;
 		}
 	});
+	function init(el) {
+		el.focus();
+	}
 	function onFocus() {
 		resultsHidden = false;
-	}
-
-	function setSizes(hidden: boolean, w: number) {
-		headPad = 12;
-		headRightWidth = inHeight + 2;
-		placeholder = '';
-		inLeftPad = inHeight + 2;
-		if (hidden) {
-			inRight = 0;
-			inputWidth = 0;
-		} else {
-			inputWidth = w - 4 - inLeftPad;
-			inRight = 2;
-		}
 	}
 
 	function toggleOpen() {
@@ -46,28 +35,15 @@
 		resultsHidden = true;
 	});
 
-	const baseInW = 420;
 	const basePlaceholder = 'Explore an Institution';
-	const basePad = 42;
-	const baseRightWidth = 220;
-	const baseInLeftPad = 60;
 
 	let innerWidth: number;
 
-	let inHeight = 30;
-	let pad = 6;
-	let headPad = basePad;
-	let inputWidth = baseInW;
-	let headRightWidth = baseRightWidth;
-	let placeholder = basePlaceholder;
-	let inLeftPad = baseInLeftPad;
-	let inRight = headRightWidth + headPad;
+	$: placeholder = resultsHidden ? '' : basePlaceholder;
 	let slimOpened = false;
 
 	let resultsHidden = true;
 	let searchTerm = '';
-
-	$: setSizes(resultsHidden, innerWidth);
 </script>
 
 <svelte:head>
@@ -86,33 +62,30 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div id="main-fix" transition:fade={{ duration: 100 }}>
-	<div id="main-head" style="width: {inHeight + pad * 2}px">
+	<div id="main-head">
 		<SearchResults bind:resultsHidden {searchTerm} />
-		<div id="head-l" style="width: {headRightWidth}px; padding-right: {headPad}px;padding: {pad}px;">
-			{#if resultsHidden}
-			<svg id="slim-stripes" viewBox="-2 -2 22 22" width={inHeight} height={inHeight - pad}
-				on:click={toggleOpen}>
+		<div id="head-l" class="head-side-elem">
+			<svg id="slim-stripes" viewBox="-2 -2 22 22" on:click={toggleOpen}>
 				{#each [3, 9, 15] as sp}
 				<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
 				{/each}
 			</svg>
-			{/if}
 			{#if slimOpened}
-			<div id="slim-drop">
+			<div transition:slide={{ duration: 400 }} id="slim-drop">
 				<a href={`${base}/`}>Home</a>
 				<a href={`${base}/about`}>About</a>
-				<a href={`${base}/about#faq`}>FAQ</a>
 			</div>
 			{/if}
 		</div>
-		<input bind:value={searchTerm} on:focus={onFocus} {placeholder} type="text" class="search-block"
-			id="search-input" style="padding-left: {inLeftPad}px;height: {inHeight -
-					hPen}px; right: {inRight}px; width: {inputWidth}px" />
-		<svg class="search-block" id="search-logo" width={inHeight} height={inHeight} viewBox="-10 -10 60 50"
-			fill="none" xmlns="http://www.w3.org/2000/svg"
-			style="right: {inRight + inputWidth + inLeftPad - inHeight}px;">
-			<SearchLogo />
-		</svg>
+		<div class="head-side-elem" id="head-r" on:click={onFocus}>
+			<svg id="search-logo" viewBox="-10 -10 60 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<SearchLogo />
+			</svg>
+		</div>
+		{#if !resultsHidden}
+		<input transition:blur={{ amount: 10, duration: 300 }} bind:value={searchTerm} on:focus={onFocus}
+			use:init {placeholder} type="text" id="search-input" />
+		{/if}
 	</div>
 	<through on:click={()=> {
 		slimOpened = false;
@@ -128,6 +101,22 @@
 		height: 100%;
 	}
 
+	svg {
+		--svg-size: min(30px, 5.5vw);
+		width: var(--svg-size);
+		height: var(--svg-size);
+	}
+
+	.head-side-elem {
+		padding: 7px;
+		margin: min(17px, 2vw);
+		border: solid var(--color-theme-darkblue) 2px;
+		border-radius: 8px;
+		box-shadow: 3px 3px 10px var(--color-theme-darkgrey2);
+		cursor: pointer;
+		background-color: var(--color-theme-white);
+	}
+
 	#main-fix {
 		padding-top: 60px;
 		display: flex;
@@ -138,19 +127,21 @@
 
 	#main-head {
 		position: fixed;
+		width: 100%;
 		top: 0px;
 		display: flex;
 		justify-content: space-between;
-		/* background-color: rgba(var(--color-range-15), 0.55); */
-		background-color: var(--color-theme-yellow);
+		align-items: start;
 		z-index: 10;
 	}
 
 	#head-l {
-		padding-right: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: end;
+		padding-bottom: 4px;
+	}
+
+	#head-r {
+		padding-top: 1px;
+		border-top: solid var(--color-theme-darkblue) 7px;
 	}
 
 	#slim-stripes {
@@ -159,33 +150,31 @@
 	}
 
 	#slim-drop {
-		position: fixed;
-		z-index: 8;
-		left: 0px;
-		top: 0px;
-		width: 93px;
-		height: 120px;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
-		padding: 12px;
-		padding-left: 20px;
-		padding-top: 58px;
-		background-color: var(--color-theme-yellow);
+		padding: 9px;
 	}
 
-	.search-block {
-		position: fixed;
-		top: 0px;
-		transition: all 0.6s;
+	#slim-drop>a {
+		padding: 3px;
 	}
 
 	#search-logo {
+		position: relative;
+		left: 0px;
+		top: 0px;
 		pointer-events: none;
-		z-index: 13;
+		z-index: 7;
 	}
 
 	#search-input {
+		position: fixed;
+		top: 17px;
+		left: 0px;
+		width: 100%;
+		height: 45px;
+		transition: all 0.6s;
 		border-top: solid var(--color-theme-darkblue) 3px;
 		border-right: 0px;
 		border-left: 0px;

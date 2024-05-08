@@ -8,6 +8,9 @@
 </script>
 
 <div id="hl" style="padding-left: {pad}px;">
+	<svg height="{size}px" width="{size}px" viewBox="0 0 20 20">
+		<PathLogo />
+	</svg>
 	<span id="logo-text">
 		<a href={`${base}/`}> <b>{APP_NAME}</b></a>
 		<span id="by-span">by CCL</span>
