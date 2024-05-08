@@ -311,8 +311,8 @@
 	d2Offset * 0.7 }, {} )}>
 	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
 </div>
-<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left:
-	d2Offset + headerShape.width + 3, width: d2Offset * 0.7 }, {} )}>
+<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { right: 3,
+	width: d2Offset * 0.7 }, {} )}>
 	<div id="spec-container">
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
