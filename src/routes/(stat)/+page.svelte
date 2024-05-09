@@ -20,6 +20,12 @@
 		return l[Math.floor(Math.random() * l.length)];
 	}
 
+	function iterQc(comb: boolean, ind: number) {
+		if (comb) {
+			// defaultQcSpecId = qcConfs[ind];
+		}
+	}
+
 	onMount(() => {
 		selectedQcRootId = getRandElem(introInstIds);
 		mainPreload().then(([aLabels, allQcSpecs]) => {
@@ -31,12 +37,21 @@
 		});
 	});
 	let texts = ['topics', 'geographies', 'publications', 'relationships'];
+
+	let qcConfs = ['qc-1', 'qc-2', 'qc-3', 'qc-4'];
+	let combThrough = true;
+
+	let wordInd = 0;
+
+	$: iterQc(combThrough, wordInd);
 </script>
 
 <div>
-	<span>
-		explore
-		<TypeWriter {texts} speed={50} />
+	<span id="tw-full">
+		<span id="tw-1"> explore </span>
+		<span id="tw-2">
+			<TypeWriter {texts} speed={50} bind:wordInd />
+		</span>
 	</span>
 </div>
 
@@ -56,17 +71,20 @@
 		position: fixed;
 		top: 0px;
 		height: 7svh;
-		z-index: 4;
+		z-index: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: 100%;
 	}
 
-	span {
+	#tw-full {
 		width: min(290px, 60vw);
 		font-size: min(1.4rem, 4vw);
 		left: 20vw;
+	}
+
+	#tw-2 {
 		background-color: var(--color-theme-darkblue);
 		color: var(--color-theme-white);
 	}

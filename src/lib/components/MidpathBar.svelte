@@ -12,12 +12,12 @@
 		let sixPath = selectedBreakdowns[0] == '1-w2qs-1';
 		let sMaps = [
 			{
-				'0-concept-hierarchy-0': 'working on',
-				'1-concept-hierarchy-0': 'are cited by papers in',
-				'0-country-hierarchy-0': 'co-author with scholars working in',
-				'1-country-hierarchy-0': 'are cited by authors working in',
-				'0-w2qs-0': 'publish in journals categorized as',
-				'1-w2qs-1': 'are cited in papers published in'
+				'0-concept-hierarchy-0': 'working on <field>',
+				'1-concept-hierarchy-0': 'are cited by papers in <field>',
+				'0-country-hierarchy-0': 'co-author with scholars working in <country>',
+				'1-country-hierarchy-0': 'are cited by authors working in <country>',
+				'0-w2qs-0': 'publish in journals categorized as <q#>',
+				'1-w2qs-1': 'are cited in papers published in <journal>'
 			},
 			{
 				'1-concept-hierarchy-0': 'and are cited by authors working on',
@@ -61,7 +61,7 @@
 	>
 		<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
 			<span>
-				{semantify(selectedBreakdowns[index] || '')}
+				{semantify(selectedBreakdowns[index] || '').split('<')[0]}
 			</span>
 		</div>
 		{#if levelSpec.levelOptions.length > 1}
@@ -91,6 +91,7 @@
 
 	select {
 		cursor: pointer;
+		-webkit-appearance: menulist-button;
 	}
 
 	.sentenceline {
@@ -102,6 +103,7 @@
 		left: 0%;
 		width: 100%;
 		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
 		box-shadow: 0 0 4px 4px #ffffff80;
 	}
 

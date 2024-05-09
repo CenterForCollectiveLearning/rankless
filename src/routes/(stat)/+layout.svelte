@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import TextedLogo from '$lib/components/TextedLogo.svelte';
-	import { APP_NAME } from '$lib/constants';
-	const year = new Date().getFullYear();
 </script>
 
 <div id="main-footed">
@@ -10,7 +8,7 @@
 		<slot />
 	</div>
 	<div id="main-foot">
-		<TextedLogo />
+		<TextedLogo pad={0} size={30} />
 		<div id="foot-r"><a href={base + '/about#contact'}>Contact</a></div>
 	</div>
 </div>
@@ -32,10 +30,12 @@
 		justify-content: space-between;
 		padding-left: 3vw;
 		padding-right: 3vw;
-		padding-top: 15px;
-		padding-bottom: 15px;
+		padding-top: 3px;
+		padding-bottom: 3px;
 		background-color: var(--color-theme-yellow);
-		flex: 0 0 70px;
+		flex: 0 0 50px;
+		z-index: 1;
+		height: min(50px, 3svh);
 	}
 
 	#foot-r {

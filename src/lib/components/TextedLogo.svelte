@@ -19,7 +19,7 @@
 
 <style>
 	#by-span {
-		font-size: 0.7rem;
+		font-size: 0.6rem;
 	}
 
 	#logo-text {
@@ -37,7 +37,7 @@
 	}
 
 	#logo-text > a > b {
-		font-size: 1.3rem;
+		font-size: 0.9rem;
 		padding-left: 15px;
 	}
 
