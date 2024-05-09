@@ -8,6 +8,7 @@
 	import introInstIds from '$lib/assets/data/intro-inst-ids.json';
 
 	import FullQc from '$lib/components/FullQc.svelte';
+	import TypeWriter from '$lib/components/TypeWriter.svelte';
 
 	let defaultQcSpecId: string | undefined;
 	let selectedQcRootId: string;
@@ -29,8 +30,44 @@
 			];
 		});
 	});
+	let texts = ['topics', 'geographies', 'publications', 'relationships'];
 </script>
 
+<div>
+	<span>
+		explore
+		<TypeWriter {texts} speed={50} />
+	</span>
+</div>
+
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-	<FullQc {selectedQcRootId} {defaultQcSpecId} {rootType} {fullQcSpecs} {attributeLabels} />
+	<FullQc
+		startSentence={''}
+		{selectedQcRootId}
+		{defaultQcSpecId}
+		{rootType}
+		{fullQcSpecs}
+		{attributeLabels}
+	/>
 {/if}
+
+<style>
+	div {
+		position: fixed;
+		top: 0px;
+		height: 7svh;
+		z-index: 4;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+	}
+
+	span {
+		width: min(290px, 60vw);
+		font-size: min(1.4rem, 4vw);
+		left: 20vw;
+		background-color: var(--color-theme-darkblue);
+		color: var(--color-theme-white);
+	}
+</style>
