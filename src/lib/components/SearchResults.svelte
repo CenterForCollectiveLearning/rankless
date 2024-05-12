@@ -70,7 +70,7 @@
 		position: fixed;
 		top: 0px;
 		left: 0px;
-		z-index: 10;
+		z-index: 20;
 		flex-direction: rows;
 		flex-wrap: wrap;
 		justify-content: space-around;
@@ -97,6 +97,7 @@
 		flex-direction: column;
 		justify-content: space-around;
 		transition: transform 0.2s ease;
+		z-index: 20;
 	}
 
 	.result-card:hover {
