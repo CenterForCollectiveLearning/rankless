@@ -12,6 +12,7 @@
 	import BrokenFittedText from '$lib/components/BrokenFittedText.svelte';
 	import NumberSlider from '$lib/components/NumberSlider.svelte';
 	import MidpathBar from '$lib/components/MidpathBar.svelte';
+	import HeadControl from './HeadControl.svelte';
 
 	export let defaultQcSpecId: string | undefined;
 	export let selectedQcRootId: string;
@@ -21,6 +22,9 @@
 	export let removeHighlightUnhover = true;
 	export let startSentence = 'Scholars at';
 	export let filterSet = 'all';
+	let specFilterYear = 2020;
+
+	let filterToPreset = false;
 
 	let selectedQcSpecId: string;
 	let currentQcSpec: tt.QcSpec;
@@ -36,11 +40,11 @@
 
 	let svgD2 = 100;
 	let rootD2 = 25;
-	let d2Offset = (svgD2 - rootD2) / 2;
+	let d2Offset = (svgD2 - rootD2) / 2.5;
 	let sideBarD2 = 0;
-	let controlPad = 6;
+	let controlPad = 3;
 
-	let d1TopPadRate = 7;
+	let d1TopPadRate = 9;
 	let d1BottomPadRate = 18;
 	let headerRate = 11;
 	let overHangRate = 0.05;
@@ -48,6 +52,7 @@
 	let minimumChildWidth = 2.5;
 	let showHoverInfo = true;
 	let showSpecInfoHover = false;
+	let showFilterHover = false;
 
 	let levelOutSpecs: tt.LevelOutSpec[] = Array(MAX_LEVEL_COUNT)
 		.fill(0)
@@ -200,7 +205,7 @@
 
 		rootAttributes = attributeLabels[rootType][selectedQcRootId];
 
-		handleStore(`qc-builds/${filterSet}/${selectedQcSpecId}/${rootId}`, (obj: tt.WeightedNode) => {
+		handleStore(`qc-builds/${selectedQcSpecId}/${rootId}`, (obj: tt.WeightedNode) => {
 			[completeTree, selectionState, currentQcSpec] = [
 				obj,
 				tf.pruneTree(selectionState, breakdownMatchLevel), //TODO might not be present in earlier part of tree
@@ -314,27 +319,14 @@
 </div>
 
 <div class="floater" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left: controlPad,
-	width: d2Offset * 0.7 }, {} )}>
+	width: d2Offset * 0.82 }, {} )}>
 	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
 </div>
-<div class="floater vert-zero" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { right:
-	controlPad, width: d2Offset * 0.7 }, {} )}>
-	<div id="spec-container">
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-		<span id="spec-info-hover" on:mouseover={()=> {
-			showSpecInfoHover = true;
-			}}
-			on:mouseleave={() => {
-			showSpecInfoHover = false;
-			}}>i</span>
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<span id="spec-label" on:click={()=> {
-			isGlobalSpecialization = !isGlobalSpecialization;
-			}}>Specialization</span>
-		<input type="checkbox" bind:checked={isGlobalSpecialization} />
-	</div>
+<div class="floater" id="right-control" style={dBasedStyle( { top: d1PadSize, height: headerShape.height }, { right:
+	controlPad, width: 100 - headerShape.width - d2Offset - controlPad - controlPad }, {} )}>
+	<HeadControl text={'Specialization'} bind:hoverToggle={showSpecInfoHover}
+		bind:checked={isGlobalSpecialization} />
+	<HeadControl text={'Recent works'} bind:hoverToggle={showFilterHover} bind:checked={filterToPreset} />
 </div>
 {#each levelOutSpecs || [] as levelSpec, index}
 <MidpathBar {index} {levelSpec} bind:selectedBreakdowns totalD1Offset={headerShape.height + d1PadSize} {dBasedStyle} />
@@ -354,6 +346,12 @@
 	sheer volume of citations is considered.
 </div>
 {/if}
+{#if showFilterHover}
+<div class="floater hoverover" id="spec-hover" style={dBasedStyle( { top: d1PadSize + headerShape.height }, { left:
+	d2Offset + headerShape.width * 0.2, width: headerShape.width * 1.6 }, {} )}>
+	Only consider works published after {specFilterYear}
+</div>
+{/if}
 {/if}
 
 <style>
@@ -365,28 +363,11 @@
 		fill: var(--color-theme-darkgrey);
 	}
 
-	#spec-label {
-		font-size: min(0.7rem, 2.2vw);
-		margin: min(9px, 1.2vw);
-		cursor: pointer;
-	}
-
-	#spec-container {
-		width: 100%;
+	#right-control {
 		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
 		align-items: center;
-		justify-content: center;
-	}
-
-	#spec-info-hover {
-		font-size: 0.7rem;
-		color: var(--color-theme-darkblue);
-		border: 1px solid var(--color-theme-darkblue);
-		padding: 4px;
-		padding-left: 8px;
-		padding-right: 8px;
-		border-radius: 1rem;
-		cursor: pointer;
 	}
 
 	#spec-hover {

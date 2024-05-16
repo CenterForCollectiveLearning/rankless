@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { APP_NAME } from '$lib/constants';
-	import { base } from '$app/paths';
+	import {APP_NAME} from '$lib/constants';
+	import {base} from '$app/paths';
 	import './styles.css';
 	import SearchLogo from '$lib/components/SearchLogo.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
-	import { afterNavigate } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { parse } from 'platform';
-	import { blur, fade, slide } from 'svelte/transition';
+	import {afterNavigate} from '$app/navigation';
+	import {onMount} from 'svelte';
+	import {parse} from 'platform';
+	import {blur, fade, slide} from 'svelte/transition';
 
 	let hPen = 0;
 
-	let uInfo: { product?: string } = {};
+	let uInfo: {product?: string} = {};
 
 	onMount(() => {
 		uInfo = parse(navigator.userAgent);
@@ -49,73 +49,53 @@
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
-		rel="stylesheet"
-	/>
-	<link
-		href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-		rel="stylesheet"
-	/>
-	<link
-		href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap"
-		rel="stylesheet"
-	/>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+		rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+		rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap" rel="stylesheet" />
 	<title>{APP_NAME}</title>
 </svelte:head>
 
 <svelte:window bind:innerWidth />
 {#if innerWidth != undefined}
-	<SearchResults bind:resultsHidden {searchTerm} />
-	{#if !resultsHidden}
-		<input
-			transition:blur={{ amount: 10, duration: 300 }}
-			bind:value={searchTerm}
-			on:focus={onFocus}
-			use:init
-			{placeholder}
-			type="text"
-			id="search-input"
-		/>
-	{/if}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div id="main-fix" transition:fade={{ duration: 100 }}>
-		<div id="main-head">
-			{#if resultsHidden}
-				<div id="head-l" class="head-side-elem">
-					<svg id="slim-stripes" viewBox="-2 -2 22 22" on:click={toggleOpen}>
-						{#each [3, 9, 15] as sp}
-							<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
-						{/each}
-					</svg>
-					{#if slimOpened}
-						<div transition:slide={{ duration: 400 }} id="slim-drop">
-							<a href={`${base}/`}>Home</a>
-							<a href={`${base}/about`}>About</a>
-						</div>
-					{/if}
-				</div>
-				<div class="head-side-elem" id="head-r" on:click={onFocus}>
-					<svg
-						id="search-logo"
-						viewBox="-10 -10 60 50"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<SearchLogo />
-					</svg>
-				</div>
+<SearchResults bind:resultsHidden {searchTerm} />
+{#if !resultsHidden}
+<input transition:blur={{ amount: 10, duration: 300 }} bind:value={searchTerm} on:focus={onFocus} use:init {placeholder}
+	type="text" id="search-input" />
+{/if}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div id="main-fix" transition:fade={{ duration: 100 }}>
+	<div id="main-head">
+		{#if resultsHidden}
+		<div id="head-l" class="head-side-elem">
+			<svg id="slim-stripes" viewBox="-2 -2 22 22" on:click={toggleOpen}>
+				{#each [3, 9, 15] as sp}
+				<path d="M1,{sp}h16" stroke="var(--color-theme-darkgrey)" stroke-width="1.5px" />
+				{/each}
+			</svg>
+			{#if slimOpened}
+			<div transition:slide={{ duration: 400 }} id="slim-drop">
+				<a href={`${base}/`}>Home</a>
+				<a href={`${base}/about`}>About</a>
+			</div>
 			{/if}
 		</div>
-		<through
-			on:click={() => {
-				slimOpened = false;
-			}}
-		>
-			<slot />
-		</through>
+		<div class="head-side-elem" id="head-r" on:click={onFocus}>
+			<svg id="search-logo" viewBox="-10 -10 60 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<SearchLogo />
+			</svg>
+		</div>
+		{/if}
 	</div>
+	<through on:click={()=> {
+		slimOpened = false;
+		}}
+		>
+		<slot />
+	</through>
+</div>
 {/if}
 
 <style>
@@ -124,14 +104,14 @@
 	}
 
 	svg {
-		--svg-size: min(30px, 5.5vw);
+		--svg-size: min(min(30px, 5.5vw), 3.8svh);
 		width: var(--svg-size);
 		height: var(--svg-size);
 	}
 
 	.head-side-elem {
 		padding: 7px;
-		margin: min(17px, 2vw);
+		margin: min(min(17px, 2vw), 1.7svh);
 		border: solid var(--color-theme-darkblue) 2px;
 		border-radius: 8px;
 		box-shadow: 3px 3px 10px var(--color-theme-darkgrey2);
@@ -181,7 +161,7 @@
 		padding: 9px;
 	}
 
-	#slim-drop > a {
+	#slim-drop>a {
 		padding: 3px;
 	}
 

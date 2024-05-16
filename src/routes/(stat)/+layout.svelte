@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import {base} from '$app/paths';
 	import TextedLogo from '$lib/components/TextedLogo.svelte';
+
+	const year = new Date().getFullYear();
 </script>
 
 <div id="main-footed">
@@ -9,7 +11,8 @@
 	</div>
 	<div id="main-foot">
 		<TextedLogo pad={0} size={30} />
-		<div id="foot-r"><a href={base + '/about#contact'}>Contact</a></div>
+		<span>{year}</span>
+		<div id="foot-r"><a href={base + '/about#contact' }>Contact</a></div>
 	</div>
 </div>
 

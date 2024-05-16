@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { handleStore } from '$lib/tree-loading';
-	import { formatNumber } from '$lib/text-format-util';
-	import { getTopFzfInsts } from '$lib/search-util';
-	import type { AttributeLabels, SelectionOption } from '$lib/tree-types';
-	import { INSTITUTION_TYPE } from '$lib/constants';
+	import {base} from '$app/paths';
+	import {goto} from '$app/navigation';
+	import {onMount} from 'svelte';
+	import {handleStore} from '$lib/tree-loading';
+	import {formatNumber} from '$lib/text-format-util';
+	import {getTopFzfInsts} from '$lib/search-util';
+	import type {AttributeLabels, SelectionOption} from '$lib/tree-types';
+	import {INSTITUTION_TYPE} from '$lib/constants';
 
 	export let resultsHidden: boolean;
 	export let searchTerm: string;
@@ -16,12 +16,12 @@
 	onMount(() => {
 		handleStore('attribute-statics', (jsv: AttributeLabels) => {
 			instOptions = Object.entries(jsv[INSTITUTION_TYPE]).map(([id, v]) => {
-				return { id, name: v.name, meta: v.meta };
+				return {id, name: v.name, meta: v.meta};
 			});
 		});
 	});
 
-	function onChange(e: { semanticId: string } | undefined) {
+	function onChange(e: {semanticId: string} | undefined) {
 		if (e != undefined) {
 			let rootType = INSTITUTION_TYPE;
 			goto(`${base}/${rootType}/${e.semanticId}`);
@@ -29,7 +29,7 @@
 	}
 	$: searchResults = getTopFzfInsts(searchTerm, instOptions, 16);
 
-	function keyBind(key: { key: string }) {
+	function keyBind(key: {key: string}) {
 		if (key.key == 'Escape') {
 			resultsHidden = true;
 		}
@@ -40,19 +40,20 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="search-results" style="display: {resultsHidden ? 'none' : 'flex'};">
-	<span id="result-closer" on:click={() => (resultsHidden = true)}>&#10006;</span>
 	{#each searchResults as searchResult}
-		<div on:click={() => onChange(searchResult)} class="result-card">
-			<h3 style="font-size: {searchResult.name.length > 50 ? 1.2 : 1.45}em;">
-				{searchResult.name}
-			</h3>
-			<span class="subtitle"
-				>{formatNumber(searchResult.papers)} papers,
-				{formatNumber(searchResult.citations)} citations</span
-			>
-		</div>
+	<div on:click={()=> onChange(searchResult)} class="result-card">
+		<h3 style="font-size: {searchResult.name.length > 50 ? 1.2 : 1.45}em;">
+			{searchResult.name}
+		</h3>
+		<span class="subtitle">{formatNumber(searchResult.papers)} papers,
+			{formatNumber(searchResult.citations)} citations</span>
+	</div>
 	{/each}
 </div>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<span id="result-closer" on:click={()=> (resultsHidden = true)}
+	style="display: {resultsHidden ? 'none' : 'flex'};">&#10006;</span>
 
 <style>
 	h3 {
@@ -113,14 +114,15 @@
 
 	#result-closer {
 		transition: transform 0.2s ease;
-		position: absolute;
-		top: 70px;
-		right: 13px;
+		position: fixed;
+		top: 60px;
+		right: 0px;
 		font-size: 37px;
 		padding: 12px;
 		text-align: center;
 		border-radius: 35px;
 		cursor: pointer;
+		z-index: 30;
 	}
 
 	#result-closer:hover {
