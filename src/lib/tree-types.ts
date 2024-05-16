@@ -1,5 +1,3 @@
-import type { EntityType } from "./constants";
-
 export type OMap<T> = Record<string, T>;
 export type PathInTree = string[];
 export type TreeGen<T> = T & { children?: OMap<TreeGen<T>> };
@@ -16,7 +14,7 @@ export type QcSpec = {
 };
 
 export type Bifurcation = {
-    attribute_kind: EntityType;
+    attribute_kind: string;
     resolver_id: string;
     description: string;
 };

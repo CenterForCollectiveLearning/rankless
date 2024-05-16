@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { afterNavigate } from '$app/navigation';
-	import { mainPreload } from '$lib/tree-loading';
+	import {onMount} from 'svelte';
+	import {page} from '$app/stores';
+	import {afterNavigate} from '$app/navigation';
+	import {mainPreload} from '$lib/tree-loading';
 
 	import type * as tt from '$lib/tree-types';
 
 	import FullQc from '$lib/components/FullQc.svelte';
 
-	let defaultQcSpecId: string | undefined;
+	let defaultQcSpecId: string = 'qc-3';
 	let selectedQcRootId: string;
 	let rootType: string;
 	let attributeLabels: tt.AttributeLabels;
 	let fullQcSpecs: tt.QcSpecMap;
+	let filterSet = 'all';
 
 	onMount(() => {
 		mainPreload().then(([aLabels, allQcSpecs]) => {
-			[defaultQcSpecId, fullQcSpecs, attributeLabels, selectedQcRootId, rootType] = [
-				Object.keys(allQcSpecs || {})[0],
+			[fullQcSpecs, attributeLabels, selectedQcRootId, rootType] = [
 				allQcSpecs || {},
 				aLabels || {},
 				getIdFromSemantic(aLabels || {}, $page.params.rootType, $page.params.rootId),
@@ -36,6 +36,11 @@
 			selectedQcRootId = parsedId;
 			rootType = $page.params.rootType;
 		}
+		const rawFilter = $page.url.searchParams.get('filter');
+		if (rawFilter) {
+			filterSet = `y-${rawFilter}`;
+			console.log('set!', filterSet);
+		}
 	});
 
 	function getIdFromSemantic(labels: tt.AttributeLabels, entityType: string, semanticId: string) {
@@ -49,5 +54,5 @@
 </script>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-	<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} />
+<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {filterSet} />
 {/if}

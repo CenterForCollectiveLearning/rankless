@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import {onMount} from 'svelte';
 
-	import { INSTITUTION_TYPE } from '$lib/constants';
-	import { mainPreload } from '$lib/tree-loading';
+	import {INSTITUTION_TYPE} from '$lib/constants';
+	import {mainPreload} from '$lib/tree-loading';
 	import type * as tt from '$lib/tree-types';
 
 	import introInstIds from '$lib/assets/data/intro-inst-ids.json';
@@ -20,12 +20,6 @@
 		return l[Math.floor(Math.random() * l.length)];
 	}
 
-	function iterQc(comb: boolean, ind: number) {
-		if (comb) {
-			// defaultQcSpecId = qcConfs[ind];
-		}
-	}
-
 	onMount(() => {
 		selectedQcRootId = getRandElem(introInstIds);
 		mainPreload().then(([aLabels, allQcSpecs]) => {
@@ -37,13 +31,7 @@
 		});
 	});
 	let texts = ['topics', 'geographies', 'publications', 'relationships'];
-
-	let qcConfs = ['qc-1', 'qc-2', 'qc-3', 'qc-4'];
-	let combThrough = true;
-
 	let wordInd = 0;
-
-	$: iterQc(combThrough, wordInd);
 </script>
 
 <div>
@@ -56,14 +44,7 @@
 </div>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-	<FullQc
-		startSentence={''}
-		{selectedQcRootId}
-		{defaultQcSpecId}
-		{rootType}
-		{fullQcSpecs}
-		{attributeLabels}
-	/>
+<FullQc startSentence={''} {selectedQcRootId} {defaultQcSpecId} {rootType} {fullQcSpecs} {attributeLabels} />
 {/if}
 
 <style>
