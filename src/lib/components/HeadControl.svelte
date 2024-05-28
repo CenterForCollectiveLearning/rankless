@@ -1,7 +1,8 @@
 <script lang="ts">
 	export let hoverToggle: boolean;
 	export let checked: boolean;
-	export let text: string;
+	export let checkBox = true;
+	export let interactText = true;
 </script>
 
 <div id="spec-container">
@@ -16,9 +17,16 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<span id="spec-label" class="small-hover" on:click={()=> {
+		if (interactText) {
 		checked = !checked;
-		}}>{text}</span>
+		}
+		}}
+		>
+		<slot />
+	</span>
+	{#if checkBox}
 	<input type="checkbox" bind:checked />
+	{/if}
 </div>
 
 <style>

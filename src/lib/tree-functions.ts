@@ -14,6 +14,17 @@ export function pruneTree(tree: BareNode, depth: number): BareNode {
     return { children: Object.fromEntries(Object.entries(tree.children || {}).map(([k, v]) => [k, pruneTree(v, depth - 1)])) }
 }
 
+export function intersectionTree(smallerTree: BareNode, biggerTree: BareNode): BareNode {
+    const children = {};
+    for (let k of Object.keys(smallerTree.children || {})) {
+        if (k in Object.keys(biggerTree.children || {})) {
+            children[k] = intersectionTree(smallerTree.children[k], biggerTree.children[k] || {});
+        }
+
+    }
+    return { children }
+}
+
 export function deriveVisibleTree(
     root: WeightedNode,
     controls: ControlSpec[],

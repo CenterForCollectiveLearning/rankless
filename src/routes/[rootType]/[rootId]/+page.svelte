@@ -13,7 +13,7 @@
 	let rootType: string;
 	let attributeLabels: tt.AttributeLabels;
 	let fullQcSpecs: tt.QcSpecMap;
-	let filterSet = 'all';
+	let specFilterYear = 2019;
 
 	onMount(() => {
 		mainPreload().then(([aLabels, allQcSpecs]) => {
@@ -38,8 +38,7 @@
 		}
 		const rawFilter = $page.url.searchParams.get('filter');
 		if (rawFilter) {
-			filterSet = `y-${rawFilter}`;
-			console.log('set!', filterSet);
+			specFilterYear = parseInt(rawFilter);
 		}
 	});
 
@@ -54,5 +53,5 @@
 </script>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {filterSet} />
+<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {specFilterYear} />
 {/if}
