@@ -72,7 +72,7 @@
 	let maxOnOneLevel = 15;
 	let globalControlShowN = tf.DEFAULT_CONTROL_SPEC.limit_n;
 	let isGlobalSpecialization = true;
-	let completeTree: tt.WeightedNode = { weight: 1 };
+	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1 };
 	let selectionState: tt.BareNode = { children: {} };
 
 	let rootAttributes: tt.AttributeLabel;
@@ -344,8 +344,8 @@
 		)}
 	>
 		<p id="num-stat-subtitle">
-			({formatNumber(parseInt(rootAttributes?.meta.papers || '0'), 0)} papers, {formatNumber(
-				parseInt(rootAttributes?.meta.citations || '0'),
+			({formatNumber(completeTree.source_count || 0, 0)} papers, {formatNumber(
+				completeTree.weight || 0,
 				0
 			)} citations)
 		</p>

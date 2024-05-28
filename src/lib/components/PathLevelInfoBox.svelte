@@ -36,6 +36,7 @@
 			nodes.push({
 				name: attributeLabels[entityKind][childId]?.name || 'Unknown',
 				weight: currentNode.weight,
+				source_count: currentNode.source_count,
 				spec: getSpecMetricObject(
 					currentNode,
 					divisorWeight,
@@ -93,7 +94,8 @@
 	{/if}
 	<p>
 		{formatNumber(leaf.weight, 0)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight >
-		1}s{/if}
+		1}s{/if},
+		{formatNumber(leaf.source_count, 0)} paper{#if leaf.weight > 1}s{/if}
 	</p>
 </div>
 {/if}
