@@ -1,6 +1,6 @@
 export const APP_NAME = 'Rankless';
 const LOCAL = false;
-export const STORE_URL = LOCAL ? 'http://0.0.0.0:8000' : 'https://tmp-borza-public-cyx.s3.amazonaws.com/quercus-basis-v6';
+export const STORE_URL = LOCAL ? 'http://0.0.0.0:8000' : 'https://tmp-borza-public-cyx.s3.amazonaws.com/quercus-basis-v2024-05-28';
 
 export const INSTITUTION_TYPE = 'institutions';
 
