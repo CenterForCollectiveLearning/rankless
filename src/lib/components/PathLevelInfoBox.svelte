@@ -92,7 +92,7 @@
 	</span>
 	{/if}
 	<p>
-		{formatNumber(leaf.weight)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight >
+		{formatNumber(leaf.weight, 0)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight >
 		1}s{/if}
 	</p>
 </div>
