@@ -27,7 +27,7 @@ export type AttributeLabels = OMap<OMap<AttributeLabel>>;
 
 
 export type BareNode = TreeGen<object>;
-export type WeightedNode = TreeGen<{ weight: number, source_count: number }>;
+export type WeightedNode = TreeGen<{ weight: number, source_count: number, top_source: [number, number] }>;
 export type NamedNode = TreeGen<{ weight: number; name: string }>;
 export type EmbeddedNode = TreeGen<{
     weight: number,

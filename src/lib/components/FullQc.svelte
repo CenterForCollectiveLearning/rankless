@@ -26,6 +26,9 @@
 	export let startSentence = 'Scholars at';
 	export let specFilterYear = 2004;
 
+	let allowPapers = true;
+	let showPaper = false;
+
 	let selectedQcSpecId: string;
 	let currentQcSpec: tt.QcSpec;
 
@@ -168,6 +171,7 @@
 		attributeLabels: tt.AttributeLabels,
 		filterSet: string
 	) {
+		showPaper = false;
 		if (rootId == null) {
 			return;
 		}
@@ -223,6 +227,7 @@
 		breakdownOptions: tt.BreakdownOptions,
 		selectedBreakdowns: tt.SelectedBreakdowns
 	) {
+		showPaper = false;
 		if (selectedBreakdowns.length == 0) return;
 		let visibleLevelCount = 1;
 		for (let meta of (tree.meta || []).slice(2)) {
@@ -259,6 +264,7 @@
 				children: parentToChange.children[leafId]?.children || {}
 			};
 		}
+		showPaper = false;
 		selectionState = selectionState;
 	}
 	function handleInteraction(event: CustomEvent<tt.TreeInteractionEvent>) {
@@ -266,6 +272,7 @@
 		const action = event.detail.action;
 		if (action == 'highlight') {
 			highlightedPath = path;
+			showPaper = false;
 			return;
 		} else if (action == 'de-highlight') {
 			if (removeHighlightUnhover) {
@@ -398,8 +405,20 @@
 	{#if showHoverInfo && highlightedPath.length > 0}
 		<div
 			transition:fade={{ duration: 200 }}
-			class="hoverover"
-			style={dBasedStyle({}, { right: 2, width: 96 }, { bottom: 1, height: d1BottomPadRate / 2 })}
+			class="hoverover clickable"
+			style={dBasedStyle(
+				{},
+				{ right: 2, width: 96 },
+				{
+					bottom: 1,
+					height: d1BottomPadRate / (showPaper ? 0.5 : 2)
+				}
+			)}
+			on:click={() => {
+				if (allowPapers) {
+					showPaper = !showPaper;
+				}
+			}}
 		>
 			<PathLevelInfoBox
 				path={highlightedPath}
@@ -407,6 +426,7 @@
 				{attributeLabels}
 				qcSpec={currentQcSpec}
 				rootId={selectedQcRootId}
+				{showPaper}
 			/>
 		</div>
 	{/if}
@@ -482,6 +502,10 @@
 		border-radius: 10px;
 		box-shadow: 0 0 5px 5px var(--color-theme-lightblue);
 		z-index: 13;
+	}
+
+	.clickable {
+		cursor: pointer;
 	}
 
 	.sentence-container {

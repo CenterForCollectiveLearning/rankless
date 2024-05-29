@@ -53,5 +53,6 @@
 </script>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {specFilterYear} />
+<FullQc {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {specFilterYear}
+	removeHighlightUnhover={false} />
 {/if}

@@ -79,6 +79,18 @@ input, option, select {
 	accent-color: var(--color-theme-darkblue);
 }
 
+.hover-m {
+	font-size: min(1rem, 2vw);
+}
+
+.hover-l {
+	font-size: min(1.1rem, 2.1vw);
+}
+
+.hover-xl {
+	font-size: min(1.3rem, 2.3vw);
+}
+
 
 .vert-zero {
 	height: 0px;
