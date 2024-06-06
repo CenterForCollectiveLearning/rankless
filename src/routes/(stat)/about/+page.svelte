@@ -1,6 +1,6 @@
 <script lang="ts">
-	import {onMount} from 'svelte';
-	import {parse} from 'platform';
+	import { onMount } from 'svelte';
+	import { parse } from 'platform';
 
 	import cclLogo from '$lib/assets/images/icons/ccl-logo.png';
 	import corvLogo from '$lib/assets/images/icons/corv-logo.png';
@@ -15,9 +15,11 @@
 
 	import AccordionElement from '$lib/components/AccordionElement.svelte';
 	import SpecCalcMath from '$lib/components/SpecCalcMath.svelte';
-	import {ALPHA} from '$lib/metric-calculation';
+	import { ALPHA } from '$lib/metric-calculation';
 	import SpecConcrete from '$lib/components/SpecConcrete.svelte';
 	import SpecConcrete2 from '$lib/components/SpecConcrete2.svelte';
+	import { afterNavigate } from '$app/navigation';
+	import { page } from '$app/stores';
 
 	let selectedId: string | undefined = undefined;
 
@@ -28,7 +30,7 @@
 	}
 
 	let isWeak = false;
-	let uInfo: {product?: string; name?: string} = {};
+	let uInfo: { product?: string; name?: string } = {};
 
 	onMount(() => {
 		uInfo = parse(navigator.userAgent);
@@ -37,12 +39,19 @@
 		}
 	});
 
+	afterNavigate(() => {
+		let anchor = $page.url.href.split('#')[1];
+		if (anchor) {
+			selectedId = anchor;
+		}
+	});
+
 	const uLogos = [cclLogo, corvLogo, tseLogo];
 
 	const protraits = [
-		{src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL'},
-		{src: matePortrait, name: 'Máté Barkóczi', role: 'Designer, CCL'},
-		{src: veraPortrait, name: 'Veronika Hamar', role: 'Executive Director, CCL'},
+		{ src: endrePortrait, name: 'Endre Borza', role: 'Research Data Engineer, CCL' },
+		{ src: matePortrait, name: 'Máté Barkóczi', role: 'Designer, CCL' },
+		{ src: veraPortrait, name: 'Veronika Hamar', role: 'Executive Director, CCL' },
 		{
 			src: cesarPortrait,
 			name: 'César A. Hidalgo',
@@ -67,8 +76,9 @@
 <h1>Our Team</h1>
 
 <p class="btxt">
-	Rankless was developed at the <a href="https://centerforcollectivelearning.org/" target="_blank">Center for
-		Collective Learning (CCL)</a>
+	Rankless was developed at the <a href="https://centerforcollectivelearning.org/" target="_blank"
+		>Center for Collective Learning (CCL)</a
+	>
 	at <a href="https://www.uni-corvinus.hu/?lang=en" target="_blank">Corvinus University</a> of Budapest
 	by a team of four people. The main person behind the project is Endre Borza, an economist working as
 	a data engineer who constructed Rankless from the ground up. The graphic and interaction design of
@@ -80,18 +90,19 @@
 <div class="bstrip" id="person-bar">
 	<div class="bar">
 		{#each protraits as port}
-		<div class="person">
-			<img class="portrait" src={port.src} alt={port.name} />
-			<p><a href={port.href} target="_blank">{port.name}</a></p>
-			<p class="prole">{port.role}</p>
-		</div>
+			<div class="person">
+				<img class="portrait" src={port.src} alt={port.name} />
+				<p><a href={port.href} target="_blank">{port.name}</a></p>
+				<p class="prole">{port.role}</p>
+			</div>
 		{/each}
 	</div>
 </div>
 <div class="btxt">
 	<p>
-		The <a href="https://centerforcollectivelearning.org/" target="_blank">Center for Collective
-			Learning</a>
+		The <a href="https://centerforcollectivelearning.org/" target="_blank"
+			>Center for Collective Learning</a
+		>
 		(CCL) is an interdisciplinary research laboratory with offices in Toulouse, France and Budapest,
 		Hungary. For more than a decade, CCL has advanced the state of the art in economic development, data
 		visualization, and applications of artificial intelligence. Previous data visaualization projects
@@ -121,8 +132,7 @@
 				measurement, extensions and visualization.
 			</p>
 			<p>
-				We use <a on:click={pickId('data')} href="#data">open, up-to-date data</a>, process it
-				with
+				We use <a on:click={pickId('data')} href="#data">open, up-to-date data</a>, process it with
 				<a on:click={pickId('impact')} href="#impact">transparent methods</a> and visualize the
 				results in an
 				<a on:click={pickId('viz')} href="#viz">intuitive, unique way</a>.
@@ -131,8 +141,10 @@
 	</div>
 	<div class="wsized">
 		<AccordionElement bind:selectedId title="What are your data-sources?" id="data">
-			We use the latest <a href="https://docs.openalex.org/download-all-data/openalex-snapshot"
-				target="_blank">OpenAlex snapshot</a>
+			We use the latest <a
+				href="https://docs.openalex.org/download-all-data/openalex-snapshot"
+				target="_blank">OpenAlex snapshot</a
+			>
 			as our main data source and expand it using journal classification and impact factor estimates
 			from
 			<a href="https://www.scimagojr.com/" target="_blank">Scimago</a>.
@@ -157,15 +169,17 @@
 			sources and institutions with at least 200 and 1500 of such papers respectively.
 		</AccordionElement>
 
-		<AccordionElement bind:selectedId title="How do you assign papers and journals to subject categories?"
-			id="classification">
-			We use OpenAlex's hierarchy of <a href="https://docs.openalex.org/api-entities/concepts"
-				target="_blank">concepts</a>
-			for each piece of work, based on the contents, while Scimago classifies journals into a
-			hierarchy
-			of 27 major thematic areas and 309 specific subject categories based on
-			<a href="https://service.elsevier.com/app/answers/detail/a_id/15181/supporthub/scopus/"
-				target="_blank">Scopus categorization</a>.
+		<AccordionElement
+			bind:selectedId
+			title="How do you assign papers and journals to subject categories?"
+			id="classification"
+		>
+			We use OpenAlex's hierarchy of <a
+				href="https://docs.openalex.org/api-entities/topics"
+				target="_blank">topics</a
+			>
+			for each piece of work, based on the contents, references, source, etc. We assign topics to a paper
+			with a match score of over 0.6.
 		</AccordionElement>
 
 		<AccordionElement bind:selectedId title="How do you measure impact?" id="impact">
@@ -179,13 +193,11 @@
 				<p>
 					We use a modified version of the <a
 						href="https://en.wikipedia.org/wiki/Revealed_comparative_advantage"
-						target="_blank">Revealed Comparative Advantage (RCA)</a>
-					metric introduced by the Hungarian economist Bela Balassa. RCA is the ratio
-					between the observed
-					and expected observations in a dataset. It is also known as the Location
-					Quotients (LQ) in
-					urban planning and economic geography or as Lift in data mining and computer
-					science.
+						target="_blank">Revealed Comparative Advantage (RCA)</a
+					>
+					metric introduced by the Hungarian economist Bela Balassa. RCA is the ratio between the observed
+					and expected observations in a dataset. It is also known as the Location Quotients (LQ) in
+					urban planning and economic geography or as Lift in data mining and computer science.
 				</p>
 				<p>Precisely, specialization is measured using the following formula:</p>
 				<p class="spec-formula">
@@ -196,51 +208,38 @@
 					<i>s</i>
 					subset in the tree of <i>i</i> entity (say an institution).
 					<i>C<sub>i,s</sub></i> is the number of citations corresponding to the <i>s</i>
-					subset in the tree of <i>i</i> entity, with <i>I</i> being the set of all
-					entities in the
+					subset in the tree of <i>i</i> entity, with <i>I</i> being the set of all entities in the
 					particular class (in our case, all institutions).
-					<i>p(s)</i> is the parent set of <i>s</i> subset, meaning the first complete
-					aggregation
+					<i>p(s)</i> is the parent set of <i>s</i> subset, meaning the first complete aggregation
 					in the tree above <i>s</i>.
-					<i>U<sub>s</sub></i> is a correctional term, to avoid outliers. It is {ALPHA} ×
-					1/<i>N<sub>s</sub></i>
+					<i>U<sub>s</sub></i> is a correctional term, to avoid outliers. It is {ALPHA} × 1/<i
+						>N<sub>s</sub></i
+					>
 					where <i>N<sub>s</sub></i> is the number of distinct elements in the subset
 				</p>
 				<p>
-					For one example, Corvinus University has 25.4k citations in our release
-					database, and has
-					a specialization metric of 2.12 (which is considered high) for the subset of
-					being cited
+					For one example, Corvinus University has 25.4k citations in our release database, and has
+					a specialization metric of 2.12 (which is considered high) for the subset of being cited
 					by the University of Bologna. This comes from
 				</p>
 				<p class="spec-formula">
 					<SpecConcrete />
 				</p>
 				<p>
-					as <i>p(s)</i> is the set of all citations, so the corresponding citation count
-					is all of them
-					at 25,401, with 129 of them belonging to the subset of the University of
-					Bologna. 0.0023 is
-					the ratio that is expected due to the size and research output of the University
-					of Bologna.
-					The correction term is drawing the ratio toward zero to avoid outliers for
-					subsets with very
-					low expected citation counts, with 6587 being the number of entities in the
-					institution class,
+					as <i>p(s)</i> is the set of all citations, so the corresponding citation count is all of them
+					at 25,401, with 129 of them belonging to the subset of the University of Bologna. 0.0023 is
+					the ratio that is expected due to the size and research output of the University of Bologna.
+					The correction term is drawing the ratio toward zero to avoid outliers for subsets with very
+					low expected citation counts, with 6587 being the number of entities in the institution class,
 					where the University of Bologna belongs.
 				</p>
 				<p>
-					For another example, 0.31 is the specialization metric for the scholars of the
-					University
-					of Toronto, publishing papers in Chemistry when the papers are co-authored by
-					scholars at
+					For another example, 0.31 is the specialization metric for the scholars of the University
+					of Toronto, publishing papers in Chemistry when the papers are co-authored by scholars at
 					Stanford. This is significantly different than the previous example as
-					<i>p(s)</i> is not the complete set of all citations which the University of
-					Toronto receives,
-					which is over 5 million, but only the subset where the papers were co-authored
-					by authors at
-					Stanford, which is about 80 thousand, 1295 of which are on chemistry. Also the
-					subject of the
+					<i>p(s)</i> is not the complete set of all citations which the University of Toronto receives,
+					which is over 5 million, but only the subset where the papers were co-authored by authors at
+					Stanford, which is about 80 thousand, 1295 of which are on chemistry. Also the subject of the
 					metric is chemistry, which is a major concept, a class with 19 elements.
 				</p>
 				<p class="spec-formula">
@@ -249,21 +248,32 @@
 			</div>
 		</AccordionElement>
 
-		<AccordionElement bind:selectedId title="What kind of visualization engine do you use?" id="viz">
+		<AccordionElement
+			bind:selectedId
+			title="What kind of visualization engine do you use?"
+			id="viz"
+		>
 			All our visualizations are hand-rolled SVGs with css transitions, made with <a
-				href="https://svelte.dev/" target="_blank">svelte</a>.
+				href="https://svelte.dev/"
+				target="_blank">svelte</a
+			>.
 		</AccordionElement>
 	</div>
 </div>
 <div class="bstrip logo-strip">
 	<h1>Created by</h1>
 	{#each uLogos as src}
-	<img class="logo" {src} alt="inst-logo" />
+		<img class="logo" {src} alt="inst-logo" />
 	{/each}
 </div>
 <div class="bstrip logo-strip" id="support-strip">
 	<h1>Supported by</h1>
-	<img class="logo" src={euLogo} alt="European Union Logo" style="width: 320px; margin-bottom: 20px;" />
+	<img
+		class="logo"
+		src={euLogo}
+		alt="European Union Logo"
+		style="width: 320px; margin-bottom: 20px;"
+	/>
 </div>
 
 <style>
@@ -303,7 +313,7 @@
 		padding-bottom: 5px;
 	}
 
-	#support-strip>h1 {
+	#support-strip > h1 {
 		color: var(--color-theme-white);
 	}
 
@@ -313,7 +323,7 @@
 		justify-content: center;
 	}
 
-	#faq-explanation>p {
+	#faq-explanation > p {
 		font-size: 1rem;
 		font-weight: 100;
 	}
@@ -358,15 +368,15 @@
 		box-shadow: 7px 7px 17px var(--color-theme-darkgrey);
 	}
 
-	.person>p {
+	.person > p {
 		text-align: center;
 	}
 
-	.btxt>p {
+	.btxt > p {
 		font-weight: 400;
 	}
 
-	.logo-strip>h1 {
+	.logo-strip > h1 {
 		width: 100%;
 		text-align: center;
 		margin-bottom: 0px;
