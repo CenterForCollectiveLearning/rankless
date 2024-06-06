@@ -46,7 +46,7 @@
 
 {#if title}
 	<div>
-		<h4 class="hover-l">Most Impactful Paper</h4>
+		<h4 class="hover-l">Most Cited Paper</h4>
 	</div>
 	<div>
 		<h3 class="hover-xl"><a {href} target="_blank">{title}</a> ({y})</h3>
