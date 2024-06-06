@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type {LevelOutSpec, OMap} from '$lib/tree-types';
-	import {fade} from 'svelte/transition';
+	import type { LevelOutSpec, OMap } from '$lib/tree-types';
+	import { fade } from 'svelte/transition';
 
 	export let levelSpec: LevelOutSpec;
 	export let index: number;
@@ -13,7 +13,7 @@
 		let sMaps = [
 			{
 				'0-concept-hierarchy-0': 'working on <field>',
-				'0-concept-hierarchy-1': 'working on <subject>',
+				'0-concept-hierarchy-1': 'working on <subfield>',
 				'1-concept-hierarchy-0': 'are cited by papers in <field>',
 				'0-country-hierarchy-0': 'co-author with scholars working in <country>',
 				'1-country-hierarchy-0': 'are cited by authors working in <country>',
@@ -50,25 +50,36 @@
 </script>
 
 {#if levelSpec.isVisible}
-<div transition:fade={{ duration: 400 }} class="sentenceline" style={dBasedStyle( { top: levelSpec.topOffset +
-	levelSpec.totalSize * 0.2 + totalD1Offset, height: levelSpec.totalSize * 0.25 }, {}, {} )}>
-	<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
-		<span>
-			{semantify(selectedBreakdowns[index] || '').split('<')[0]} </span>
+	<div
+		transition:fade={{ duration: 400 }}
+		class="sentenceline"
+		style={dBasedStyle(
+			{
+				top: levelSpec.topOffset + levelSpec.totalSize * 0.2 + totalD1Offset,
+				height: levelSpec.totalSize * 0.25
+			},
+			{},
+			{}
+		)}
+	>
+		<div class="sel-base sel-cover {levelSpec.levelOptions.length > 1 ? 'sel-clicky' : ''}">
+			<span>
+				{semantify(selectedBreakdowns[index] || '').split('<')[0]}
+			</span>
+		</div>
+		{#if levelSpec.levelOptions.length > 1}
+			<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
+				{#each levelSpec.levelOptions as bd}
+					<option value={bd}>
+						{semantify(bd)}
+					</option>
+				{/each}
+			</select>
+		{/if}
+		<div class="bg filler" />
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
 	</div>
-	{#if levelSpec.levelOptions.length > 1}
-	<select bind:value={selectedBreakdowns[index]} class="sel-base" style="opacity: 0">
-		{#each levelSpec.levelOptions as bd}
-		<option value={bd}>
-			{semantify(bd)}
-		</option>
-		{/each}
-	</select>
-	{/if}
-	<div class="bg filler" />
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-</div>
 {/if}
 
 <style>
@@ -124,18 +135,18 @@
 		align-items: center;
 	}
 
-	.sel-clicky>span::after {
+	.sel-clicky > span::after {
 		content: ' \25BD';
 	}
 
-	.sel-base>span {
+	.sel-base > span {
 		padding: 8px;
 		background: #ffffff70;
 		backdrop-filter: blur(10px);
 		border-radius: 3px;
 	}
 
-	.sel-clicky>span {
+	.sel-clicky > span {
 		border: 1px solid var(--color-theme-darkblue);
 		color: var(--color-theme-darkblue);
 	}
