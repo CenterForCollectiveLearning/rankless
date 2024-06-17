@@ -17,7 +17,7 @@ export function pruneTree(tree: BareNode, depth: number): BareNode {
 export function intersectionTree(smallerTree: BareNode, biggerTree: BareNode): BareNode {
     const children = {};
     for (let k of Object.keys(smallerTree.children || {})) {
-        if (k in Object.keys(biggerTree.children || {})) {
+        if (Object.keys(biggerTree.children || {}).includes(k)) {
             children[k] = intersectionTree(smallerTree.children[k], biggerTree.children[k] || {});
         }
 

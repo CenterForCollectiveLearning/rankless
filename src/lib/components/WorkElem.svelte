@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { INSTITUTION_TYPE } from '$lib/constants';
 	import { formatNumber } from '$lib/text-format-util';
+	import type { AttributeLabels } from '$lib/tree-types';
 	import { onMount } from 'svelte';
 
 	export let workArr: [number, number];
-	export let instId: string = '';
-	export let instName: string = '';
+	export let attributeLabels: AttributeLabels;
+	export let instId: string | undefined;
 
 	let oaId = workArr[0];
 	let title = '';
@@ -13,8 +15,9 @@
 	let authors: { name: string; link: string; isOfInst: boolean }[] = [];
 	let localCount = 0;
 
-	let fullInstName = instName.length > 50 ? 'affiliated' : `from ${instName}`;
-
+	$: instName = attributeLabels[INSTITUTION_TYPE][instId || '']?.name || '';
+	$: instOaNum = attributeLabels[INSTITUTION_TYPE][instId || '']?.meta.oa_id || '';
+	$: fullInstName = instName.length > 50 ? 'affiliated' : `from ${instName}`;
 	$: href = `https://openalex.org/works/W${oaId}`;
 
 	onMount(() => {
@@ -22,6 +25,7 @@
 			return;
 		}
 		let oaUrl = `https://api.openalex.org/works/W${oaId}?select=publication_year,title,doi,authorships`;
+		let instOaId = `https://openalex.org/I${instOaNum}`;
 		fetch(oaUrl).then((resp) => {
 			resp.json().then((o) => {
 				doi = o.doi;
@@ -29,7 +33,7 @@
 				for (let aship of o.authorships) {
 					let isOfInst = false;
 					for (let aff of aship.institutions || []) {
-						if (aff.id == instId) {
+						if (aff.id == instOaId) {
 							isOfInst = true;
 							localCount = localCount + 1;
 							break;

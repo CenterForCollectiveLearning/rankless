@@ -2,30 +2,37 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { afterNavigate } from '$app/navigation';
-	import { mainPreload } from '$lib/tree-loading';
+	import { handleLabels } from '$lib/tree-loading';
 
 	import type * as tt from '$lib/tree-types';
 
 	import FullQc from '$lib/components/FullQc.svelte';
 	import { APP_NAME } from '$lib/constants';
 
-	let defaultQcSpecId: string = 'qc-3';
+	import fullQcSpecs from '$lib/assets/data/qc-specs.json';
+	import rootSpecs from '$lib/assets/data/root-basics.json';
+
+	let defaultQcSpecId: string;
 	let selectedQcRootId: string;
 	let rootType: string;
 	let attributeLabels: tt.AttributeLabels;
-	let fullQcSpecs: tt.QcSpecMap;
 	let specFilterYear = 2019;
+	let startSentence: string;
 
 	let titleExtension = '';
 
 	onMount(() => {
-		mainPreload().then(([aLabels, allQcSpecs]) => {
-			[fullQcSpecs, attributeLabels, selectedQcRootId, rootType] = [
-				allQcSpecs || {},
+		handleLabels((aLabels) => {
+			[attributeLabels, selectedQcRootId, rootType] = [
 				aLabels || {},
 				getIdFromSemantic(aLabels || {}, $page.params.rootType, $page.params.rootId),
 				$page.params.rootType
 			];
+			let rSpec = rootSpecs.filter((v) => v.entity_type == rootType)[0];
+
+			defaultQcSpecId = rSpec.default_tree;
+			startSentence = rSpec.start_sentence;
+
 			let name = attributeLabels[rootType][selectedQcRootId]?.name;
 			if (name) {
 				titleExtension = ` - ${name}`;
@@ -63,7 +70,7 @@
 	<title>{APP_NAME}{titleExtension}</title>
 </svelte:head>
 
-{#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
+{#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId, startSentence].includes(undefined)}
 	<FullQc
 		{selectedQcRootId}
 		{rootType}
@@ -71,6 +78,7 @@
 		{fullQcSpecs}
 		{defaultQcSpecId}
 		{specFilterYear}
+		{startSentence}
 		removeHighlightUnhover={false}
 	/>
 {/if}

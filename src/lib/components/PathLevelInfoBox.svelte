@@ -3,13 +3,15 @@
 	import { formatNumber } from '$lib/text-format-util';
 	import { getSpecMetricObject, type SpecInfo } from '$lib/metric-calculation';
 	import WorkElem from './WorkElem.svelte';
+	import { INSTITUTION_TYPE } from '$lib/constants';
 
-	export let rootId: string;
 	export let path: PathInTree;
 	export let qcSpec: QcSpec;
+	export let rootId: string;
 	export let attributeLabels: AttributeLabels;
 	export let weightedRoot: WeightedNode;
 	export let showPaper: boolean = false;
+	let instId: string | undefined;
 
 	function getNodes(
 		path: PathInTree,
@@ -21,8 +23,12 @@
 		top_source: [number, number];
 		spec: SpecInfo;
 	}[] {
+		instId = undefined;
 		if (qcSpec?.root_entity_type === undefined) {
 			return [];
+		}
+		if (qcSpec.root_entity_type == INSTITUTION_TYPE) {
+			instId = rootId;
 		}
 		const nodes = [
 			{
@@ -41,6 +47,9 @@
 			const bif = qcSpec.bifurcations[i];
 			const nextBif = qcSpec.bifurcations[i + 1];
 			const entityKind = bif.attribute_kind;
+			if (instId == undefined && entityKind == INSTITUTION_TYPE) {
+				instId = childId;
+			}
 			const entityN = Object.keys(attributeLabels[entityKind]).length;
 			currentNode = currentNode.children[childId] || { weight: 0, children: {} };
 
@@ -89,11 +98,7 @@
 {#if path != undefined}
 	<div class="top-container" style="height: {showPaper ? topRate : 0}%;">
 		{#if showPaper}
-			<WorkElem
-				workArr={leaf.top_source}
-				instId={attributeLabels[qcSpec.root_entity_type][rootId]?.meta.oa_id || ''}
-				instName={pathNodes[0].name}
-			/>
+			<WorkElem workArr={leaf.top_source} {attributeLabels} {instId} />
 		{/if}
 	</div>
 	<div class="box-container" style="height: {showPaper ? 100 - topRate : 100}%;">

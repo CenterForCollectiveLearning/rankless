@@ -10,6 +10,14 @@
 
 	function semantify(s: string) {
 		let sixPath = selectedBreakdowns[0] == '1-w2qs-1';
+		let aggedPath = selectedBreakdowns[0] == 'agged-institutions-to-countries';
+
+		let globalMap = {
+			'agged-institutions-to-countries': 'working at'
+		};
+
+		let trueInd = aggedPath ? Math.max(index - 1, 0) : index;
+
 		let sMaps = [
 			{
 				'0-concept-hierarchy-0': 'working on <field>',
@@ -45,7 +53,7 @@
 			},
 			{}
 		];
-		return sMaps[index][s] || s;
+		return sMaps[trueInd][s] || globalMap[s] || s;
 	}
 </script>
 
