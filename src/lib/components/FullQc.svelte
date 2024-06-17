@@ -33,6 +33,7 @@
 	let currentQcSpec: tt.QcSpec;
 
 	let highlightedPath: tt.PathInTree = [];
+	let highlightRoot = selectedQcRootId;
 	let selectedPath: tt.PathInTree = [];
 	let expandControlInd: number | undefined;
 
@@ -75,7 +76,7 @@
 	let maxOnOneLevel = 15;
 	let globalControlShowN = tf.DEFAULT_CONTROL_SPEC.limit_n;
 	let isGlobalSpecialization = true;
-	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1 };
+	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1, top_source: [0, 0] };
 	let selectionState: tt.BareNode = { children: {} };
 
 	let rootAttributes: tt.AttributeLabel;
@@ -210,13 +211,13 @@
 		for (let i = breakdownMatchLevel; i < controlSpecs.length; i++) {
 			controlSpecs[i].include = [];
 		}
-
 		rootAttributes = attributeLabels[rootType][selectedQcRootId];
 		handleStore(`qc-builds/${filterSet}/${selectedQcSpecId}/${rootId}`, (obj: tt.WeightedNode) => {
-			[completeTree, selectionState, currentQcSpec] = [
+			[completeTree, selectionState, currentQcSpec, highlightRoot] = [
 				obj,
 				tf.intersectionTree(tf.pruneTree(selectionState, breakdownMatchLevel), obj),
-				fullQcSpecs[selectedQcSpecId]
+				fullQcSpecs[selectedQcSpecId],
+				rootId
 			];
 		});
 	}
@@ -423,9 +424,9 @@
 			<PathLevelInfoBox
 				path={highlightedPath}
 				weightedRoot={completeTree}
-				{attributeLabels}
 				qcSpec={currentQcSpec}
-				rootId={selectedQcRootId}
+				rootId={highlightRoot}
+				{attributeLabels}
 				{showPaper}
 			/>
 		</div>
