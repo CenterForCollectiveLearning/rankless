@@ -9,8 +9,10 @@
 	import { parse } from 'platform';
 	import { blur, fade, slide } from 'svelte/transition';
 
-	let hPen = 0;
+	import rootSpecs from '$lib/assets/data/root-basics.json';
 
+	let runner: number;
+	let hPen = 0;
 	let uInfo: { product?: string } = {};
 
 	onMount(() => {
@@ -18,6 +20,7 @@
 		if (uInfo.product == 'iPhone' || uInfo.product == 'iPad') {
 			hPen = 10;
 		}
+		runner = setInterval(changeText, speed);
 	});
 	function init(el) {
 		el.focus();
@@ -35,15 +38,46 @@
 		resultsHidden = true;
 	});
 
-	const basePlaceholder = 'Explore an Institution';
-
 	let innerWidth: number;
 
-	$: placeholder = resultsHidden ? '' : basePlaceholder;
 	let slimOpened = false;
 
 	let resultsHidden = true;
 	let searchTerm = '';
+
+	let speed = 70;
+	let stopAtEnd = 350;
+	let texts = rootSpecs.map((r) => r.entity_type);
+	let wordInd = 0;
+	let text = texts[wordInd];
+	$: basePlaceholder = 'Explore ' + text;
+
+	let letterInd = Math.floor(text.length / 2);
+	let direction = +1;
+
+	function changeText() {
+		if (wordInd == texts.length) {
+			wordInd = 0;
+		}
+		let word = texts[wordInd];
+		text = word.slice(0, letterInd);
+		if (letterInd == word.length) {
+			clearInterval(runner);
+			setTimeout(() => {
+				runner = setInterval(changeText, speed);
+			}, stopAtEnd);
+		}
+		letterInd += direction;
+		if (letterInd == word.length) {
+			direction = -1;
+		}
+		if (letterInd == 0) {
+			direction = 1;
+			wordInd = wordInd + 1;
+		}
+	}
+
+	$: placeholder = resultsHidden ? '' : basePlaceholder;
 </script>
 
 <svelte:head>
