@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
-	import { afterNavigate } from '$app/navigation';
-	import { handleLabels } from '$lib/tree-loading';
+	import {onMount} from 'svelte';
+	import {page} from '$app/stores';
+	import {afterNavigate} from '$app/navigation';
+	import {handleLabels} from '$lib/tree-loading';
 
 	import type * as tt from '$lib/tree-types';
 
 	import FullQc from '$lib/components/FullQc.svelte';
-	import { APP_NAME } from '$lib/constants';
+	import {APP_NAME} from '$lib/constants';
 
 	import fullQcSpecs from '$lib/assets/data/qc-specs.json';
 	import rootSpecs from '$lib/assets/data/root-basics.json';
@@ -18,8 +18,9 @@
 	let attributeLabels: tt.AttributeLabels;
 	let specFilterYear = 2019;
 	let startSentence: string;
+	let rootName: string = '';
 
-	let titleExtension = '';
+	$: titleExtension = rootName.length > 0 ? ` - ${rootName}` : '';
 
 	onMount(() => {
 		handleLabels((aLabels) => {
@@ -30,25 +31,22 @@
 			];
 			let rSpec = rootSpecs.filter((v) => v.entity_type == rootType)[0];
 
-			defaultQcSpecId = rSpec.default_tree;
-			startSentence = rSpec.start_sentence;
-
-			let name = attributeLabels[rootType][selectedQcRootId]?.name;
-			if (name) {
-				titleExtension = ` - ${name}`;
-			}
+			[defaultQcSpecId, startSentence] = [rSpec.default_tree, rSpec.start_sentence];
 		});
 	});
 
 	afterNavigate(() => {
-		let parsedId = getIdFromSemantic(
-			attributeLabels || {},
-			$page.params.rootType,
-			$page.params.rootId
-		);
-		if (selectedQcRootId != parsedId || rootType != $page.params.rootType) {
-			selectedQcRootId = parsedId;
-			rootType = $page.params.rootType;
+		let tmpRootType = $page.params.rootType;
+		let parsedId = getIdFromSemantic(attributeLabels || {}, tmpRootType, $page.params.rootId);
+
+		if (selectedQcRootId != parsedId || rootType != tmpRootType) {
+			let rSpec = rootSpecs.filter((v) => v.entity_type == tmpRootType)[0];
+			[selectedQcRootId, rootType, defaultQcSpecId, startSentence] = [
+				parsedId,
+				$page.params.rootType,
+				rSpec.default_tree,
+				rSpec.start_sentence
+			];
 		}
 		const rawFilter = $page.url.searchParams.get('filter');
 		if (rawFilter) {
@@ -71,14 +69,6 @@
 </svelte:head>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId, startSentence].includes(undefined)}
-	<FullQc
-		{selectedQcRootId}
-		{rootType}
-		{attributeLabels}
-		{fullQcSpecs}
-		{defaultQcSpecId}
-		{specFilterYear}
-		{startSentence}
-		removeHighlightUnhover={false}
-	/>
+<FullQc bind:rootName {selectedQcRootId} {rootType} {attributeLabels} {fullQcSpecs} {defaultQcSpecId} {specFilterYear}
+	{startSentence} removeHighlightUnhover={false} />
 {/if}
