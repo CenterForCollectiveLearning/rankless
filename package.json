@@ -9,7 +9,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"deploy": "echo www.rankless.org > build/CNAME && touch build/.nojekyll && gh-pages -d build -t true -b rankless-page -o rankless",
-		"alpha": "touch build/.nojekyll && gh-pages -d build -t true",
+		"alpha": "vite build && touch build/.nojekyll && gh-pages -d build -t true",
 		"test": "playwright test",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
