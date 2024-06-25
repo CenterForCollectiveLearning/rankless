@@ -1,8 +1,8 @@
 <script lang="ts">
-	import {onMount} from 'svelte';
+	import { onMount } from 'svelte';
 
-	import {INSTITUTION_TYPE} from '$lib/constants';
-	import {handleLabels} from '$lib/tree-loading';
+	import { INSTITUTION_TYPE } from '$lib/constants';
+	import { handleLabels } from '$lib/tree-loading';
 	import type * as tt from '$lib/tree-types';
 
 	import introInstIds from '$lib/assets/data/intro-inst-ids.json';
@@ -21,11 +21,16 @@
 	}
 
 	onMount(() => {
-		selectedQcRootId = getRandElem(introInstIds);
+		let randRoot = getRandElem(introInstIds);
 		handleLabels((aLabels: tt.AttributeLabels) => {
-			[defaultQcSpecId, attributeLabels] = [
-				getRandElem(Object.keys(fullQcSpecs || {})),
-				aLabels || {}
+			[defaultQcSpecId, attributeLabels, selectedQcRootId] = [
+				getRandElem(
+					Object.entries(fullQcSpecs || {})
+						.filter(([_, v]) => v.root_entity_type == rootType)
+						.map(([k, _]) => k)
+				),
+				aLabels || {},
+				randRoot
 			];
 		});
 	});
@@ -43,7 +48,14 @@
 </div>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-<FullQc startSentence={''} {selectedQcRootId} {defaultQcSpecId} {rootType} {fullQcSpecs} {attributeLabels} />
+	<FullQc
+		startSentence={''}
+		{selectedQcRootId}
+		{defaultQcSpecId}
+		{rootType}
+		{fullQcSpecs}
+		{attributeLabels}
+	/>
 {/if}
 
 <style>
