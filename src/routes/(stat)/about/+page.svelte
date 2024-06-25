@@ -350,6 +350,12 @@
 		color: var(--color-theme-darkgrey);
 	}
 
+	@media (max-width: 768px) {
+		.btxt {
+			text-align: left;
+		}
+	}
+
 	.prole {
 		font-weight: 300;
 	}
