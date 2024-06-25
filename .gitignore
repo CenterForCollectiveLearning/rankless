@@ -12,4 +12,5 @@ vite.config.ts.timestamp-*
 misc.py
 raw
 */images/raw/
-**ipynb*
+*ipynb*
+roots.json
