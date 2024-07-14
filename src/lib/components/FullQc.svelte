@@ -1,11 +1,11 @@
 <script lang="ts">
-	import {fade} from 'svelte/transition';
-	import {handleStore} from '$lib/tree-loading';
+	import { fade } from 'svelte/transition';
+	import { handleStore } from '$lib/tree-loading';
 
 	import type * as tt from '$lib/tree-types';
 	import * as tf from '$lib/tree-functions';
-	import {formatNumber} from '$lib/text-format-util';
-	import {MAX_LEVEL_COUNT} from '$lib/constants';
+	import { formatNumber } from '$lib/text-format-util';
+	import { MAX_LEVEL_COUNT, COMPLETE_YEAR } from '$lib/constants';
 
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
 	import PathLevelInfoBox from '$lib/components/PathLevelInfoBox.svelte';
@@ -14,8 +14,7 @@
 	import MidpathBar from '$lib/components/MidpathBar.svelte';
 	import HeadControl from './HeadControl.svelte';
 
-	const COMPLETE_YEAR = 2004;
-	const POSSIBLE_YEAR_FILTERS = [2004, 2019, 2020, 2021, 2022, 2023];
+	const POSSIBLE_YEAR_FILTERS = [COMPLETE_YEAR, 2019, 2020, 2021, 2022, 2023];
 
 	export let defaultQcSpecId: string | undefined;
 	export let selectedQcRootId: string;
@@ -24,7 +23,7 @@
 	export let fullQcSpecs: tt.QcSpecMap;
 	export let removeHighlightUnhover = true;
 	export let startSentence = 'Scholars at';
-	export let specFilterYear = 2004;
+	export let specFilterYear = COMPLETE_YEAR;
 	export let rootName = '';
 
 	let allowPapers = true;
@@ -72,13 +71,13 @@
 	let controlSpecs: tt.ControlSpec[] = Array(MAX_LEVEL_COUNT)
 		.fill(0)
 		.map(() => {
-			return {...tf.DEFAULT_CONTROL_SPEC};
+			return { ...tf.DEFAULT_CONTROL_SPEC };
 		});
 	let maxOnOneLevel = 15;
 	let globalControlShowN = tf.DEFAULT_CONTROL_SPEC.limit_n;
 	let isGlobalSpecialization = true;
-	let completeTree: tt.WeightedNode = {weight: 1, source_count: 1, top_source: [0, 0]};
-	let selectionState: tt.BareNode = {children: {}};
+	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1, top_source: [0, 0] };
+	let selectionState: tt.BareNode = { children: {} };
 
 	let rootAttributes: tt.AttributeLabel;
 
@@ -147,7 +146,7 @@
 				for (let bif of v.bifurcations) {
 					const bDef = bif.description;
 					if (!(bDef in boObj)) {
-						boObj[bDef] = {children: {}, qcSpecs: []};
+						boObj[bDef] = { children: {}, qcSpecs: [] };
 					}
 					boObj[bDef].qcSpecs.push(k);
 					boObj = boObj[bDef].children;
@@ -198,6 +197,8 @@
 		}
 		if (bdLevel != undefined) {
 			selectedQcSpecId = bdLevel.qcSpecs[0];
+		} else {
+			selectedQcSpecId = defaultQcSpecId;
 		}
 
 		while (selectedBreakdowns.length > 0) {
@@ -306,79 +307,168 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 {#if !Object.values(svgShape).includes(NaN) && !Object.values(svgShape).includes(undefined)}
-<svg viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}" xmlns="http://www.w3.org/2000/svg">
-	<QuercusBranches qcSpec={currentQcSpec} branchReachBack={(svgD1 * headerRate) / 100} d2Offset={d2Offset +
-		sideBarD2} {rootD2} {attributeLabels} {visibleTreeInfo} {selectionState} {levelOutSpecs} treeD2={svgD2 -
-		sideBarD2} treeD2Offset={sideBarD2} {childD1Rate} {overHangRate} childBaseSize={minimumChildWidth}
-		on:ti={handleInteraction} />
-	<rect id="qc-header" {...headerShape} rx="0.4" />
-
-	<BrokenFittedText height={headerShape.height * 0.7} width={headerShape.width * 0.8} text={rootName || '' }
-		anchor={'middle'} bottomAligned={false} x={headerShape.x + headerShape.width / 2} y={headerShape.y +
-		headerShape.height * 0.75} allowRotation={false} />
-</svg>
-
-<div class="floater sentence-container" style={dBasedStyle({ top: 0 }, { left: 20, width: 60 }, { height: d1TopPadRate
-	})}>
-	<p id="sentence-starter">{startSentence}</p>
-</div>
-
-<div class="floater sentence-container" style={dBasedStyle( {}, { left: headerShape.x - headerShape.width / 2, width:
-	headerShape.width * 2 }, { height: headerRate * 0.15, top: headerRate * 0.85 + d1TopPadRate } )}>
-	{#if completeTree.weight > 1}
-	<p id="num-stat-subtitle">
-		({formatNumber(completeTree.source_count || 0, 0)} papers, {formatNumber(
-		completeTree.weight || 0,
-		0
-		)} citations)
-	</p>
-	{/if}
-</div>
-
-<div class="floater" style={dBasedStyle( { top: d1PadSize + headerShape.height * 0.5, height: 0 }, { left: controlPad,
-	width: d2Offset * 0.82 }, {} )}>
-	<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
-</div>
-<div class="floater" id="right-control" style={dBasedStyle( { top: d1PadSize, height: headerShape.height }, { right:
-	controlPad, width: 100 - headerShape.width - d2Offset - controlPad - controlPad }, {} )}>
-	<HeadControl bind:hoverToggle={showSpecInfoHover} bind:checked={isGlobalSpecialization}>Specialization
-	</HeadControl>
-	<HeadControl bind:hoverToggle={showFilterHover} interactText={false} checked={false} checkBox={false}>Since
-		<select bind:value={specFilterYear}>{#each POSSIBLE_YEAR_FILTERS as y}
-			<option>{y}</option>
-			{/each}
-		</select>
-	</HeadControl>
-</div>
-{#each levelOutSpecs || [] as levelSpec, index}
-<MidpathBar {index} {levelSpec} bind:selectedBreakdowns totalD1Offset={headerShape.height + d1PadSize} {dBasedStyle} />
-{/each}
-{#if showHoverInfo && highlightedPath.length > 0}
-<div transition:fade={{ duration: 200 }} class="hoverover clickable" style={dBasedStyle( {}, { right: 2, width: 96 }, {
-	bottom: 1, height: d1BottomPadRate / (showPaper ? 0.5 : 2) } )} on:click={()=> {
-	if (allowPapers) {
-	showPaper = !showPaper;
-	}
-	}}
+	<svg
+		viewBox="{svgShape.x} {svgShape.y} {svgShape.width} {svgShape.height}"
+		xmlns="http://www.w3.org/2000/svg"
 	>
-	<PathLevelInfoBox path={highlightedPath} weightedRoot={completeTree} qcSpec={currentQcSpec}
-		rootId={highlightRoot} {attributeLabels} {showPaper} />
-</div>
-{/if}
-{#if showSpecInfoHover}
-<div class="floater hoverover" id="spec-hover" style={dBasedStyle( { top: d1PadSize + headerShape.height }, { left:
-	d2Offset + headerShape.width * 0.2, width: headerShape.width * 1.6 }, {} )}>
-	Specialization is calculated using the expected prevelance of a country, source, or concept,
-	and comparing it to the one present in the current breakdown flow. If it is switched off, the
-	sheer volume of citations is considered.
-</div>
-{/if}
-{#if showFilterHover}
-<div class="floater hoverover" id="spec-hover" style={dBasedStyle( { top: d1PadSize + headerShape.height * 1.1 }, {
-	left: d2Offset + headerShape.width * 0.2, width: headerShape.width * 1.6 }, {} )}>
-	Filter the underlying dataset to papers published in or after {specFilterYear}.
-</div>
-{/if}
+		<QuercusBranches
+			qcSpec={currentQcSpec}
+			branchReachBack={(svgD1 * headerRate) / 100}
+			d2Offset={d2Offset + sideBarD2}
+			{rootD2}
+			{attributeLabels}
+			{visibleTreeInfo}
+			{selectionState}
+			{levelOutSpecs}
+			treeD2={svgD2 - sideBarD2}
+			treeD2Offset={sideBarD2}
+			{childD1Rate}
+			{overHangRate}
+			childBaseSize={minimumChildWidth}
+			on:ti={handleInteraction}
+		/>
+		<rect id="qc-header" {...headerShape} rx="0.4" />
+
+		<BrokenFittedText
+			height={headerShape.height * 0.7}
+			width={headerShape.width * 0.8}
+			text={rootName || ''}
+			anchor={'middle'}
+			bottomAligned={false}
+			x={headerShape.x + headerShape.width / 2}
+			y={headerShape.y + headerShape.height * 0.75}
+			allowRotation={false}
+		/>
+	</svg>
+
+	<div
+		class="floater sentence-container"
+		style={dBasedStyle({ top: 0 }, { left: 20, width: 60 }, { height: d1TopPadRate })}
+	>
+		<p id="sentence-starter">{startSentence}</p>
+	</div>
+
+	<div
+		class="floater sentence-container"
+		style={dBasedStyle(
+			{},
+			{ left: headerShape.x - headerShape.width / 2, width: headerShape.width * 2 },
+			{ height: headerRate * 0.15, top: headerRate * 0.85 + d1TopPadRate }
+		)}
+	>
+		{#if completeTree.weight > 1}
+			<p id="num-stat-subtitle">
+				({formatNumber(completeTree.source_count || 0, 0)} papers, {formatNumber(
+					completeTree.weight || 0,
+					0
+				)} citations)
+			</p>
+		{/if}
+	</div>
+
+	<div
+		class="floater"
+		style={dBasedStyle(
+			{ top: d1PadSize + headerShape.height * 0.5, height: 0 },
+			{ left: controlPad, width: d2Offset * 0.82 },
+			{}
+		)}
+	>
+		<NumberSlider bind:value={globalControlShowN} min={1} max={maxOnOneLevel} />
+	</div>
+	<div
+		class="floater"
+		id="right-control"
+		style={dBasedStyle(
+			{ top: d1PadSize, height: headerShape.height },
+			{ right: controlPad, width: 100 - headerShape.width - d2Offset - controlPad - controlPad },
+			{}
+		)}
+	>
+		<HeadControl bind:hoverToggle={showSpecInfoHover} bind:checked={isGlobalSpecialization}
+			>Specialization
+		</HeadControl>
+		<HeadControl
+			bind:hoverToggle={showFilterHover}
+			interactText={false}
+			checked={false}
+			checkBox={false}
+			>Since
+			<select bind:value={specFilterYear}
+				>{#each POSSIBLE_YEAR_FILTERS as y}
+					<option>{y}</option>
+				{/each}
+			</select>
+		</HeadControl>
+	</div>
+	{#each levelOutSpecs || [] as levelSpec, index}
+		<MidpathBar
+			{index}
+			{levelSpec}
+			bind:selectedBreakdowns
+			totalD1Offset={headerShape.height + d1PadSize}
+			{dBasedStyle}
+		/>
+	{/each}
+	{#if showHoverInfo && highlightedPath.length > 0}
+		<div
+			transition:fade={{ duration: 200 }}
+			class="hoverover clickable"
+			style={dBasedStyle(
+				{},
+				{ right: 2, width: 96 },
+				{
+					bottom: 1,
+					height: d1BottomPadRate / (showPaper ? 0.5 : 2)
+				}
+			)}
+			on:click={() => {
+				if (allowPapers) {
+					showPaper = !showPaper;
+				}
+			}}
+		>
+			<PathLevelInfoBox
+				path={highlightedPath}
+				weightedRoot={completeTree}
+				qcSpec={currentQcSpec}
+				rootId={highlightRoot}
+				{attributeLabels}
+				{showPaper}
+			/>
+		</div>
+	{/if}
+	{#if showSpecInfoHover}
+		<div
+			class="floater hoverover"
+			id="spec-hover"
+			style={dBasedStyle(
+				{ top: d1PadSize + headerShape.height },
+				{ left: d2Offset + headerShape.width * 0.2, width: headerShape.width * 1.6 },
+				{}
+			)}
+		>
+			Specialization is calculated using the expected prevelance of a country, source, or concept,
+			and comparing it to the one present in the current breakdown flow. If it is switched off, the
+			sheer volume of citations is considered.
+		</div>
+	{/if}
+	{#if showFilterHover}
+		<div
+			class="floater hoverover"
+			id="spec-hover"
+			style={dBasedStyle(
+				{ top: d1PadSize + headerShape.height * 1.1 },
+				{
+					left: d2Offset + headerShape.width * 0.2,
+					width: headerShape.width * 1.6
+				},
+				{}
+			)}
+		>
+			Filter the underlying dataset to papers published in or after {specFilterYear}.
+		</div>
+	{/if}
 {/if}
 
 <style>
