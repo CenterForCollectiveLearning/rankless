@@ -26,6 +26,7 @@
 				'0-country-hierarchy-0': 'co-author with scholars working in <country>',
 				'1-country-hierarchy-0': 'are cited by authors working in <country>',
 				'0-w2qs-0': 'publish in journals categorized as <q#>',
+				'0-w2qs-1': 'published in <journal>',
 				'1-w2qs-1': 'are cited in papers published in <journal>'
 			},
 			{
