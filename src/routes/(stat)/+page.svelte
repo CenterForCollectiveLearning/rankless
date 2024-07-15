@@ -1,11 +1,12 @@
 <script lang="ts">
-	import {onMount} from 'svelte';
+	import { onMount } from 'svelte';
 
-	import {INSTITUTION_TYPE} from '$lib/constants';
-	import {mainPreload} from '$lib/tree-loading';
+	import { INSTITUTION_TYPE } from '$lib/constants';
+	import { handleLabels } from '$lib/tree-loading';
 	import type * as tt from '$lib/tree-types';
 
 	import introInstIds from '$lib/assets/data/intro-inst-ids.json';
+	import fullQcSpecs from '$lib/assets/data/qc-specs.json';
 
 	import FullQc from '$lib/components/FullQc.svelte';
 	import TypeWriter from '$lib/components/TypeWriter.svelte';
@@ -14,19 +15,22 @@
 	let selectedQcRootId: string;
 	let rootType: string = INSTITUTION_TYPE;
 	let attributeLabels: tt.AttributeLabels;
-	let fullQcSpecs: tt.QcSpecMap;
 
 	function getRandElem(l: string[]) {
 		return l[Math.floor(Math.random() * l.length)];
 	}
 
 	onMount(() => {
-		selectedQcRootId = getRandElem(introInstIds);
-		mainPreload().then(([aLabels, allQcSpecs]) => {
-			[defaultQcSpecId, fullQcSpecs, attributeLabels] = [
-				getRandElem(Object.keys(allQcSpecs || {})),
-				allQcSpecs || {},
-				aLabels || {}
+		let randRoot = getRandElem(introInstIds);
+		handleLabels((aLabels: tt.AttributeLabels) => {
+			[defaultQcSpecId, attributeLabels, selectedQcRootId] = [
+				getRandElem(
+					Object.entries(fullQcSpecs || {})
+						.filter(([_, v]) => v.root_entity_type == rootType)
+						.map(([k, _]) => k)
+				),
+				aLabels || {},
+				randRoot
 			];
 		});
 	});
@@ -44,7 +48,14 @@
 </div>
 
 {#if ![selectedQcRootId, rootType, attributeLabels, fullQcSpecs, defaultQcSpecId].includes(undefined)}
-<FullQc startSentence={''} {selectedQcRootId} {defaultQcSpecId} {rootType} {fullQcSpecs} {attributeLabels} />
+	<FullQc
+		startSentence={''}
+		{selectedQcRootId}
+		{defaultQcSpecId}
+		{rootType}
+		{fullQcSpecs}
+		{attributeLabels}
+	/>
 {/if}
 
 <style>

@@ -21,11 +21,12 @@ export function getTopFzf(term: string, entities: OMap<{ name: string }>, limit:
 }
 
 
-export function getTopFzfInsts(term: string, entities: SelectionOption[], limit: number) {
+export function getTopFzfRoot(term: string, entities: SelectionOption[], limit: number) {
     //
-    const out: { name: string, id: string, semanticId: string, papers: number, citations: number }[] = [];
+    const out: { name: string, id: string, semanticId: string, rootType: string, papers: number, citations: number }[] = [];
     const lowTerms = unidecode(term).split(' ').map((e) => e.toLowerCase());
-    for (const { id, name, meta } of entities) {
+    for (const { id, name, meta, rootType } of entities) {
+        
         const eLow = unidecode(name).toLowerCase()
         if (lowTerms.map((t) => eLow.includes(t)).reduce((l, r) => l && r)) {
             const semanticId = meta?.semantic_id;
@@ -34,7 +35,7 @@ export function getTopFzfInsts(term: string, entities: SelectionOption[], limit:
             }
             const papers = parseInt(meta?.papers || '0');
             const citations = parseInt(meta?.citations || '0');
-            const newEntry = { name, id, papers, citations, semanticId }
+            const newEntry = { name, id, papers, citations, semanticId, rootType }
             if ((out.length < limit) || (out[out.length - 1].citations < newEntry.citations)) {
                 (out.length >= limit) && out.pop();
                 insertKeepingOrder(newEntry, out, (l, r) => r.citations - l.citations);

@@ -10,6 +10,14 @@
 
 	function semantify(s: string) {
 		let sixPath = selectedBreakdowns[0] == '1-w2qs-1';
+		let aggedPath = selectedBreakdowns[0] == 'agged-institutions-to-countries';
+
+		let globalMap = {
+			'agged-institutions-to-countries': 'working at'
+		};
+
+		let trueInd = aggedPath ? Math.max(index - 1, 0) : index;
+
 		let sMaps = [
 			{
 				'0-concept-hierarchy-0': 'working on <field>',
@@ -18,6 +26,7 @@
 				'0-country-hierarchy-0': 'co-author with scholars working in <country>',
 				'1-country-hierarchy-0': 'are cited by authors working in <country>',
 				'0-w2qs-0': 'publish in journals categorized as <q#>',
+				'0-w2qs-1': 'published in <journal>',
 				'1-w2qs-1': 'are cited in papers published in <journal>'
 			},
 			{
@@ -45,7 +54,7 @@
 			},
 			{}
 		];
-		return sMaps[index][s] || s;
+		return sMaps[trueInd][s] || globalMap[s] || s;
 	}
 </script>
 

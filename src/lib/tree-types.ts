@@ -5,6 +5,7 @@ export type TreeGen<T> = T & { children?: OMap<TreeGen<T>> };
 export type SelectionOption = {
     name: string;
     id: string;
+    rootType: string;
     meta?: OMap<string>;
 };
 
@@ -17,6 +18,7 @@ export type Bifurcation = {
     attribute_kind: string;
     resolver_id: string;
     description: string;
+    source_side: boolean;
 };
 
 

@@ -20,6 +20,7 @@
 	import SpecConcrete2 from '$lib/components/SpecConcrete2.svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { COMPLETE_YEAR } from '$lib/constants';
 
 	let selectedId: string | undefined = undefined;
 
@@ -165,8 +166,8 @@
 
 		<AccordionElement bind:selectedId title="Do you filter the data?" id="data-filter">
 			We consider only non-retracted publications with no more than 20 authors that were published
-			after 2004, and have been cited at least twice. Additionally, we only consider publication
-			sources and institutions with at least 200 and 1500 of such papers respectively.
+			after {COMPLETE_YEAR}, and have been cited at least twice. Additionally, we only consider
+			publication sources and institutions with at least 200 and 1500 of such papers respectively.
 		</AccordionElement>
 
 		<AccordionElement
@@ -348,6 +349,12 @@
 		margin-top: 100px;
 		margin-bottom: 60px;
 		color: var(--color-theme-darkgrey);
+	}
+
+	@media (max-width: 768px) {
+		.btxt {
+			text-align: left;
+		}
 	}
 
 	.prole {

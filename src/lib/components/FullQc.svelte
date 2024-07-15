@@ -5,7 +5,7 @@
 	import type * as tt from '$lib/tree-types';
 	import * as tf from '$lib/tree-functions';
 	import { formatNumber } from '$lib/text-format-util';
-	import { MAX_LEVEL_COUNT } from '$lib/constants';
+	import { MAX_LEVEL_COUNT, COMPLETE_YEAR } from '$lib/constants';
 
 	import QuercusBranches from '$lib/components/QuercusBranches.svelte';
 	import PathLevelInfoBox from '$lib/components/PathLevelInfoBox.svelte';
@@ -14,8 +14,7 @@
 	import MidpathBar from '$lib/components/MidpathBar.svelte';
 	import HeadControl from './HeadControl.svelte';
 
-	const COMPLETE_YEAR = 2004;
-	const POSSIBLE_YEAR_FILTERS = [2004, 2019, 2020, 2021, 2022, 2023];
+	const POSSIBLE_YEAR_FILTERS = [COMPLETE_YEAR, 2019, 2020, 2021, 2022, 2023];
 
 	export let defaultQcSpecId: string | undefined;
 	export let selectedQcRootId: string;
@@ -24,7 +23,8 @@
 	export let fullQcSpecs: tt.QcSpecMap;
 	export let removeHighlightUnhover = true;
 	export let startSentence = 'Scholars at';
-	export let specFilterYear = 2004;
+	export let specFilterYear = COMPLETE_YEAR;
+	export let rootName = '';
 
 	let allowPapers = true;
 	let showPaper = false;
@@ -33,6 +33,7 @@
 	let currentQcSpec: tt.QcSpec;
 
 	let highlightedPath: tt.PathInTree = [];
+	let highlightRoot = selectedQcRootId;
 	let selectedPath: tt.PathInTree = [];
 	let expandControlInd: number | undefined;
 
@@ -75,7 +76,7 @@
 	let maxOnOneLevel = 15;
 	let globalControlShowN = tf.DEFAULT_CONTROL_SPEC.limit_n;
 	let isGlobalSpecialization = true;
-	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1 };
+	let completeTree: tt.WeightedNode = { weight: 1, source_count: 1, top_source: [0, 0] };
 	let selectionState: tt.BareNode = { children: {} };
 
 	let rootAttributes: tt.AttributeLabel;
@@ -84,7 +85,6 @@
 
 	$: filterSet = specFilterYear == COMPLETE_YEAR ? 'all' : `y-${specFilterYear}`;
 
-	$: breakdownOptions = getBreakdownOptions(fullQcSpecs, rootType);
 	$: childD1Rate = expandControlInd == undefined ? defaultChildD1Rate : 0.7;
 	$: svgD1 = (innerHeight / innerWidth) * svgD2;
 	$: d1ToPixels = (d1: number) => (d1 * innerHeight) / svgD1;
@@ -105,7 +105,7 @@
 		y: (-(headerRate + d1TopPadRate) * svgD1) / 100
 	};
 
-	$: loadNewQc(selectedBreakdowns, selectedQcRootId, attributeLabels, filterSet);
+	$: loadNewQc(selectedBreakdowns, selectedQcRootId, rootType, attributeLabels, filterSet);
 	$: alignToGlobalShown(globalControlShowN);
 
 	$: alignToGlobalControlSpec(isGlobalSpecialization);
@@ -122,7 +122,7 @@
 		visibleTreeInfo,
 		svgD1 * (1 - (headerRate + d1BottomPadRate) / 100),
 		expandControlInd,
-		breakdownOptions,
+		getBreakdownOptions(fullQcSpecs, rootType),
 		selectedBreakdowns
 	);
 
@@ -168,6 +168,7 @@
 	function loadNewQc(
 		selectedBreakdowns: tt.SelectedBreakdowns,
 		rootId: string | undefined,
+		rootType: string,
 		attributeLabels: tt.AttributeLabels,
 		filterSet: string
 	) {
@@ -180,13 +181,13 @@
 		}
 		let breakdownMatchLevel = 0;
 		const newSelections = [];
-		let bdKeys = breakdownOptions;
+		let bdKeys = getBreakdownOptions(fullQcSpecs, rootType);
 		let bdLevel;
 		for (let selectedBD of selectedBreakdowns) {
 			newSelections.push(selectedBD);
 			// need to figure out what index changed, might get messed up...
 			bdLevel = bdKeys[selectedBD];
-			if (bdLevel === undefined) return;
+			if (bdLevel === undefined) break;
 			if (bdLevel.qcSpecs.includes(selectedQcSpecId)) {
 				breakdownMatchLevel++;
 			} else {
@@ -194,7 +195,11 @@
 			}
 			bdKeys = bdLevel.children;
 		}
-		selectedQcSpecId = bdLevel?.qcSpecs[0] || '';
+		if (bdLevel != undefined) {
+			selectedQcSpecId = bdLevel.qcSpecs[0];
+		} else {
+			selectedQcSpecId = defaultQcSpecId;
+		}
 
 		while (selectedBreakdowns.length > 0) {
 			selectedBreakdowns.pop();
@@ -210,13 +215,14 @@
 		for (let i = breakdownMatchLevel; i < controlSpecs.length; i++) {
 			controlSpecs[i].include = [];
 		}
-
 		rootAttributes = attributeLabels[rootType][selectedQcRootId];
 		handleStore(`qc-builds/${filterSet}/${selectedQcSpecId}/${rootId}`, (obj: tt.WeightedNode) => {
-			[completeTree, selectionState, currentQcSpec] = [
+			[completeTree, selectionState, currentQcSpec, highlightRoot, rootName] = [
 				obj,
 				tf.intersectionTree(tf.pruneTree(selectionState, breakdownMatchLevel), obj),
-				fullQcSpecs[selectedQcSpecId]
+				fullQcSpecs[selectedQcSpecId],
+				rootId,
+				rootAttributes?.name
 			];
 		});
 	}
@@ -326,7 +332,7 @@
 		<BrokenFittedText
 			height={headerShape.height * 0.7}
 			width={headerShape.width * 0.8}
-			text={rootAttributes?.name || ''}
+			text={rootName || ''}
 			anchor={'middle'}
 			bottomAligned={false}
 			x={headerShape.x + headerShape.width / 2}
@@ -350,12 +356,14 @@
 			{ height: headerRate * 0.15, top: headerRate * 0.85 + d1TopPadRate }
 		)}
 	>
-		<p id="num-stat-subtitle">
-			({formatNumber(completeTree.source_count || 0, 0)} papers, {formatNumber(
-				completeTree.weight || 0,
-				0
-			)} citations)
-		</p>
+		{#if completeTree.weight > 1}
+			<p id="num-stat-subtitle">
+				({formatNumber(completeTree.source_count || 0, 0)} papers, {formatNumber(
+					completeTree.weight || 0,
+					0
+				)} citations)
+			</p>
+		{/if}
 	</div>
 
 	<div
@@ -423,9 +431,9 @@
 			<PathLevelInfoBox
 				path={highlightedPath}
 				weightedRoot={completeTree}
-				{attributeLabels}
 				qcSpec={currentQcSpec}
-				rootId={selectedQcRootId}
+				rootId={highlightRoot}
+				{attributeLabels}
 				{showPaper}
 			/>
 		</div>
