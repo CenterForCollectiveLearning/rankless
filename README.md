@@ -1,3 +1,2 @@
-# Academic Impact Explorer
+# Rankless monorepo
 
-MVP development

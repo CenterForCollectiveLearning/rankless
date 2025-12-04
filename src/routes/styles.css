@@ -1,8 +1,7 @@
-/* @import '@fontsource/fira-mono'; */
-
 :root {
+	/* --font-mono: 'Roboto Mono', monospace; */
+	--font-mono: 'Courier New', monospace;
 	--font-body: var(--font-mono);
-	--font-mono: 'Roboto Mono', monospace;
 
 	--color-range-5: 13, 198, 243;
 	--color-range-10: 25, 176, 230;
@@ -27,39 +26,73 @@
 	--color-range-105: 44, 96, 245;
 	--color-range-110: 239, 143, 160;
 
-	--color-text: #21272A;
 	--color-text-light: #697077;
 
-	--color-theme-yellow: #FBF4E5;
-	--color-theme-lightblue: #DCE3EC;
-	--color-theme-lightblue2: #3F8EF7;
+	--color-theme-yellow: #fbf4e5;
+	--color-theme-lightblue: #dce3ec;
+	--color-theme-lightblue2: #3f8ef7;
 	--color-theme-darkblue: rgba(var(--color-range-30), 0.9);
-	--color-theme-blue: #6BA8DA;
-	--color-theme-purple: #C5C5E0;
-	--color-theme-pink: #CEBAD3;
-	--color-theme-red: #FD8A9F;
-	--color-theme-darkgrey: #4F4F4F;
+	--color-theme-shadow: var(--color-theme-darkgrey2);
+	--color-theme-blue: #6ba8da;
+	--color-theme-purple: #c5c5e0;
+	--color-theme-pink: #cebad3;
+	--color-theme-red: #fd8a9f;
+	--color-theme-darkgrey: #4f4f4f;
 	--color-theme-darkgrey2: #ababab;
 	--color-theme-darkgrey3: #707070;
-	--color-theme-lightgrey: #D8D8D8;
-	--color-theme-red: #FE7D95;
-	--color-theme-white: #F2F2F2;
+	--color-theme-lightgrey: #d8d8d8;
+	--color-theme-red: #fe7d95;
+	--color-theme-white: #f2f2f2;
+	--color-theme-darktext: #21272a;
+	--color-theme-black: #1b2222;
 	/* methods video colors */
-	--color-graph-pink: #E83547;
+	--color-graph-pink: #e83547;
 
 	font-family: var(--font-body);
-	color: var(--color-text);
+	--unified-margin: min(min(27px, 2vw), 3.7svh);
+	--unified-padding: 18px;
+	--borad: 6px
 }
+:root {
+	--text-bg: #ffffff;
+	--text-bg-2: var(--color-theme-white);
+	--text-bg-3: var(--color-theme-lightblue);
+	/* --text-bg: var(--color-theme-white); */
+	--hard-overlay: #ffffff90;
+	--color-text: var(--color-theme-darktext);
+	--accent-text: var(--color-theme-darkgrey);
+	--highlight-text: var(--color-theme-darkblue);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--text-bg: var(--color-theme-darkgrey);
+		--text-bg-2: var(--color-theme-darkgrey3);
+		--text-bg-3: var(--color-theme-darkblue);
+		--hard-overlay: #4f4f4f70;
+		--color-text: var(--color-theme-white);
+		--accent-text: var(--color-theme-pink);
+		--highlight-text: var(--color-theme-yellow);
+	}
+}
+ 
 
 html,
 body {
-  height: 100%;
-  margin: 0;
+	height: 100%;
+	margin: 0px;
+	color: var(--color-text);
+	background-color: var(--text-bg);
 }
 
-body {
-	background-color: #ffffff;
+* {
+	box-sizing: border-box;
 }
+
+text {
+	fill: var(--color-text)
+}
+
 
 h1 {
 	margin: 0;
@@ -67,28 +100,72 @@ h1 {
 
 a {
 	text-decoration: none;
-	color: var(--color-theme-darkgrey);
+	color: var(--accent-text);
 }
 
 a:hover {
-	color: var(--color-theme-darkblue);
-	font-weight: bold;
+	color: var(--highlight-text);
+	text-shadow: 1px 0px 0px var(--color-theme-shadow);
+	/* text-decoration: underline; */
+	/* font-weight: bold; */
 }
 
-input, option, select {
+input,
+option,
+select {
 	accent-color: var(--color-theme-darkblue);
 }
 
+
+.hoverover {
+	position: absolute;
+	transition: all 500ms;
+	background-color: var(--text-bg);
+	border: solid 1px var(--color-theme-darkblue);
+	z-index: 13;
+}
+
+.shadowy {
+	border-radius: var(--borad);
+	box-shadow: 3px 3px 10px var(--color-theme-shadow);
+}
+
+.padded {
+	padding: var(--unified-padding)
+}
+
+.ali {
+	text-decoration: underline;
+}
+
+.marged {
+	margin: var(--unified-margin)
+}
+
+.clickable {
+	cursor: pointer;
+}
+
+.hover-xs {
+	font-size: min(0.75rem, 1.5vw);
+}
+
+
+.hover-s {
+	font-size: min(0.85rem, 2.2vw);
+}
+
 .hover-m {
-	font-size: min(1rem, 2vw);
+	font-size: min(1rem, 2.5vw);
 }
 
 .hover-l {
-	font-size: min(1.1rem, 2.1vw);
+	font-size: min(1.1rem, 3vw);
 }
 
+
 .hover-xl {
-	font-size: min(1.3rem, 2.3vw);
+	font-size: min(1.3rem, 3.6vw);
 }
 
 

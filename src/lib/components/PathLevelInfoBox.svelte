@@ -1,165 +1,167 @@
 <script lang="ts">
-	import type { AttributeLabels, PathInTree, QcSpec, WeightedNode } from '$lib/tree-types';
-	import { formatNumber } from '$lib/text-format-util';
+	import type { AttributeLabels, PathInTree, TreeSpec, ResponseNode } from '$lib/tree-types';
+	import { nameById, UNKNOWN_NAME } from '$lib/tree-functions';
+	import { formatNumber, pluralize, getSpecDesc } from '$lib/text-format-util';
 	import { getSpecMetricObject, type SpecInfo } from '$lib/metric-calculation';
 	import WorkElem from './WorkElem.svelte';
-	import { INSTITUTION_TYPE } from '$lib/constants';
 
 	export let path: PathInTree;
-	export let qcSpec: QcSpec;
-	export let rootId: string;
+	export let treeSpec: TreeSpec;
+	export let rootId: number;
+	export let initHeight: number;
+	export let rootName: string;
 	export let attributeLabels: AttributeLabels;
-	export let weightedRoot: WeightedNode;
+	export let rootNode: ResponseNode;
 	export let showPaper: boolean = false;
-	let instId: string | undefined;
+	export let backupNames: Record<number, string> = {};
+
+	let instId: number | undefined;
+	let citeText = '';
 
 	function getNodes(
 		path: PathInTree,
-		weightedRoot: WeightedNode
+		root: ResponseNode,
+		attributeLabels: AttributeLabels,
+		treeSpec: TreeSpec
 	): {
 		name: string;
-		weight: number;
-		source_count: number;
-		top_source: [number, number];
+		linkCount: number;
+		sourceCount: number;
+		topSourceId: number;
+		topSourceLinks: number;
 		spec: SpecInfo;
 	}[] {
 		instId = undefined;
-		if (qcSpec?.root_entity_type === undefined) {
+		const citeRestricts = [];
+		if (treeSpec?.rootType === undefined) {
 			return [];
 		}
-		if (qcSpec.root_entity_type == INSTITUTION_TYPE) {
+		if (treeSpec.rootType == 'institutions') {
 			instId = rootId;
 		}
 		const nodes = [
 			{
-				weight: weightedRoot.weight,
-				source_count: weightedRoot.source_count,
-				top_source: weightedRoot.top_source,
-				name: attributeLabels[qcSpec.root_entity_type][rootId].name,
+				linkCount: root.linkCount,
+				sourceCount: root.sourceCount,
+				topSourceId: root.topSourceId,
+				topSourceLinks: root.topSourceLinks,
+				name: rootName,
 				spec: { nodeRate: 0, specMetric: 0, baselineRate: 0 }
 			}
 		];
-		let divisorWeight = weightedRoot.weight;
-		let divisorResolver = qcSpec.bifurcations[0].resolver_id;
-		let currentNode = weightedRoot;
+		let divisors = [];
+		let currentNode = rootNode;
 		for (let i = 0; i < path.length; i++) {
+			divisors.push(currentNode.linkCount);
 			const childId = path[i];
-			const bif = qcSpec.bifurcations[i];
-			const nextBif = qcSpec.bifurcations[i + 1];
-			const entityKind = bif.attribute_kind;
-			if (instId == undefined && entityKind == INSTITUTION_TYPE) {
+			const bd = treeSpec.breakdowns[i];
+			const entityKind = bd.attributeType;
+			if (instId == undefined && entityKind == 'institutions') {
 				instId = childId;
 			}
-			const entityN = Object.keys(attributeLabels[entityKind]).length;
-			currentNode = currentNode.children[childId] || { weight: 0, children: {} };
-
+			if (currentNode.children == undefined) {
+				break;
+			}
+			let name = nameById(attributeLabels, entityKind, childId);
+			if (name == UNKNOWN_NAME) {
+				let backupName = backupNames[childId];
+				if (backupName != undefined) name = backupName;
+			}
+			if (!bd.sourceSide) {
+				citeRestricts.push(name);
+			}
+			currentNode = currentNode.children[childId] || { linkCount: 0, children: {} };
 			nodes.push({
-				name: attributeLabels[entityKind][childId]?.name || 'Unknown',
-				weight: currentNode.weight,
-				source_count: currentNode.source_count,
-				top_source: currentNode.top_source,
+				name,
+				linkCount: currentNode.linkCount,
+				sourceCount: currentNode.sourceCount,
+				topSourceId: currentNode.topSourceId,
+				topSourceLinks: currentNode.topSourceLinks,
 				spec: getSpecMetricObject(
 					currentNode,
-					divisorWeight,
-					entityN,
-					entityKind,
-					attributeLabels,
-					childId,
-					bif.description
+					divisors[bd.specDenomInd],
+					attributeLabels[entityKind],
+					childId
 				)
 			});
-			if (nextBif?.resolver_id != divisorResolver) {
-				divisorResolver = nextBif?.resolver_id;
-				divisorWeight = currentNode.weight;
-			}
+		}
+		let leaf = nodes[nodes.length - 1];
+		if (citeRestricts.length > 0) {
+			citeText =
+				pluralize('citation', leaf.topSourceLinks || 0) +
+				' on branch of ' +
+				citeRestricts.join(' > ');
+		} else {
+			citeText = pluralize('citation', leaf.topSourceLinks || 0);
 		}
 		return nodes;
 	}
 
-	function getDesc(rate: number) {
-		let desc = 'Average';
-		if (rate > 2.5) {
-			desc = 'Very High';
-		} else if (rate > 1.2) {
-			desc = 'High';
-		} else if (rate < 0.75) {
-			desc = 'Low';
-		}
-		return desc;
-	}
-
-	let hoverSpec = false;
-	let topRate = 75;
-
-	$: pathNodes = getNodes(path || [], weightedRoot);
+	$: pathNodes = getNodes(path || [], rootNode, attributeLabels, treeSpec);
 	$: leaf = pathNodes[pathNodes.length - 1];
+	$: expanded = showPaper && (leaf.sourceCount || 0) > 0;
+	$: citePrefix =
+		path.length > 0 && (leaf.linkCount || 0) > 0
+			? `(${(leaf.spec.nodeRate * 100).toFixed(2)}%) `
+			: '';
 </script>
 
-{#if path != undefined}
-	<div class="top-container" style="height: {showPaper ? topRate : 0}%;">
-		{#if showPaper}
-			<WorkElem workArr={leaf.top_source} {attributeLabels} {instId} />
-		{/if}
-	</div>
-	<div class="box-container" style="height: {showPaper ? 100 - topRate : 100}%;">
-		<h2 class="hover-l">{leaf.name}</h2>
-		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-		<p
-			on:mouseover={() => {
-				hoverSpec = false;
-			}}
-			on:mouseleave={() => {
-				hoverSpec = false;
-			}}
-			class="hover-m"
-		>
-			{getDesc(leaf.spec.specMetric)} Specialization
-		</p>
-		{#if hoverSpec}
-			<span id="spec-hover">
-				metric = {formatNumber(leaf.spec.specMetric, 3)}; base = {leaf.spec.baselineRate}; nodeRate
-				= {leaf.spec.nodeRate}; childN={leaf.weight}
-			</span>
-		{/if}
-		<p class="hover-m">
-			{formatNumber(leaf.weight || 0, 0)} ({(leaf.spec.nodeRate * 100).toFixed(2)}%) citation{#if leaf.weight > 1}s{/if},
-			{formatNumber(leaf.source_count || 0, 0)} paper{#if leaf.source_count > 1}s{/if}
-		</p>
-	</div>
-{/if}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<div
+	class="hoverover shadowy clickable growing"
+	id="plibox-container"
+	role="none"
+	tabindex="-1"
+	style="height: {initHeight * (expanded ? 4 : 1)}px"
+	on:click={() => {
+		showPaper = !showPaper;
+	}}
+>
+	{#if path != undefined && leaf != undefined}
+		<div id="box-container" style="height: {initHeight}px;">
+			<h2 class="hover-xl">{leaf.name}</h2>
+			<p class="hover-l">
+				{#if path.length > 0 && (leaf.linkCount || 0) > 0}
+					{getSpecDesc(leaf.spec.specMetric)} Specialization
+				{/if}
+			</p>
+			<p class="hover-l">
+				{pluralize('paper', leaf.sourceCount || 0)}
+				receiving
+				{pluralize(`${citePrefix}citation`, leaf.linkCount || 0)}
+			</p>
+		</div>
+		<div class="growing" style="height: {initHeight * (expanded ? 3 : 0)}px;">
+			{#if expanded}
+				<WorkElem workId={leaf.topSourceId} {citeText} {attributeLabels} {instId} />
+			{/if}
+		</div>
+	{/if}
+</div>
 
 <style>
-	h2 {
-		text-align: center;
-		padding: 15px;
-		margin: 0px;
-		text-align: center;
-	}
-
 	p {
 		text-align: center;
-		padding-left: 20px;
+		font-weight: 600;
 	}
 
-	.box-container {
+	.growing {
+		transition: height 350ms ease-in-out;
+	}
+
+	#plibox-container {
+		width: 100%;
+		bottom: 0px;
+	}
+
+	#box-container {
 		display: flex;
+		gap: var(--unified-padding);
 		flex-direction: row;
-		justify-content: space-around;
+		justify-content: space-between;
 		align-items: center;
-	}
-
-	.top-container {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-around;
-		align-items: center;
-	}
-
-	#spec-hover {
-		position: absolute;
-		top: 0px;
-		left: 0px;
-		padding: 15px;
-		background-color: var(--color-theme-lightgrey);
+		padding-left: var(--unified-padding);
+		padding-right: var(--unified-padding);
 	}
 </style>

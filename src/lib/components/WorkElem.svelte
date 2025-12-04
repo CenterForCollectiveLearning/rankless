@@ -1,35 +1,57 @@
 <script lang="ts">
-	import { INSTITUTION_TYPE } from '$lib/constants';
-	import { formatNumber } from '$lib/text-format-util';
-	import type { AttributeLabels } from '$lib/tree-types';
+	import type { AttributeLabels, AttributeLabel } from '$lib/tree-types';
 	import { onMount } from 'svelte';
+	import HoverI from './HoverI.svelte';
+	import HoverBlock from './HoverBlock.svelte';
 
-	export let workArr: [number, number];
+	export let workId: number;
+	export let citeText: string;
 	export let attributeLabels: AttributeLabels;
-	export let instId: string | undefined;
+	export let instId: number | undefined;
 
-	let oaId = workArr[0];
 	let title = '';
 	let doi = '';
+	let abstract = '';
+	let abstractDetails = false;
 	let y = 0;
 	let authors: { name: string; link: string; isOfInst: boolean }[] = [];
 	let localCount = 0;
 
-	$: instName = attributeLabels[INSTITUTION_TYPE][instId || '']?.name || '';
-	$: instOaNum = attributeLabels[INSTITUTION_TYPE][instId || '']?.meta.oa_id || '';
+	function getInstInfo(labels: AttributeLabels, id: number | undefined): [AttributeLabel, number] {
+		let instAtts: AttributeLabel = { name: '', oaId: -1, specBaseline: 0 };
+		let instOaNum = -1;
+		let instLabs = labels?.institutions;
+		if (instLabs != undefined && id != undefined) {
+			let thisInstAtts = instLabs[id];
+			if (thisInstAtts != undefined) {
+				instAtts = thisInstAtts;
+				instOaNum = instAtts.oaId || -1;
+			}
+		}
+		return [instAtts, instOaNum];
+	}
+
+	$: [instAtts, instOaNum] = getInstInfo(attributeLabels, instId);
+	$: instName = instAtts.name || '';
 	$: fullInstName = instName.length > 50 ? 'affiliated' : `from ${instName}`;
-	$: href = `https://openalex.org/works/W${oaId}`;
+	let oaLink = `https://openalex.org/works/W${workId}`;
+	$: href = doi.length > 0 ? doi : oaLink;
 
 	onMount(() => {
-		if (oaId == 0) {
-			return;
-		}
-		let oaUrl = `https://api.openalex.org/works/W${oaId}?select=publication_year,title,doi,authorships`;
+		if (workId == 0) return;
+		let oaUrl = `https://api.openalex.org/works/W${workId}?select=publication_year,title,doi,authorships,abstract_inverted_index`;
 		let instOaId = `https://openalex.org/I${instOaNum}`;
 		fetch(oaUrl).then((resp) => {
 			resp.json().then((o) => {
-				doi = o.doi;
+				doi = o.doi || '';
 				y = o.publication_year;
+				let aWords = [];
+				for (const [word, idxs] of Object.entries(o.abstract_inverted_index || {})) {
+					for (const i of idxs) {
+						aWords[i] = word;
+					}
+				}
+				abstract = aWords.join(' ');
 				for (let aship of o.authorships) {
 					let isOfInst = false;
 					for (let aff of aship.institutions || []) {
@@ -39,9 +61,11 @@
 							break;
 						}
 					}
-					authors.push({ name: aship.author.display_name, link: aship.author.id, isOfInst });
+					let lElems = aship.author.id.split('/');
+					let link = `/oa-id/${lElems[lElems.length - 1]}`;
+					authors.push({ name: aship.author.display_name, link, isOfInst });
 				}
-				authors = authors.sort((l, r) => r.isOfInst - l.isOfInst);
+				authors = authors.sort((l, r) => Number(r.isOfInst) - Number(l.isOfInst));
 				title = o.title;
 			});
 		});
@@ -49,81 +73,71 @@
 </script>
 
 {#if title}
-	<div>
-		<h4 class="hover-l">Most Cited Paper</h4>
-	</div>
-	<div>
-		<h3 class="hover-xl"><a {href} target="_blank">{title}</a> ({y})</h3>
-	</div>
-	<div>
-		{#if doi}
-			<span class="hover-m">
-				<a href={doi} target="_blank">{doi}</a>
-			</span>
+	<div id="main" class="padded">
+		<row>
+			<rowheader class="hover-s">Top Paper:</rowheader>
+			<h3 class="hover-m"><a {href} target="_blank">{title}</a> ({y})</h3>
+		</row>
+		{#if abstract}
+			<row>
+				<rowheader class="hover-s">Abstract:</rowheader>
+				<span class="hover-m">
+					{#if abstract.length > 80}
+						{abstract.slice(0, 80)}... <HoverI bind:hoverToggle={abstractDetails} />
+						<HoverBlock show={abstractDetails} style="bottom: 20px; right: 20px; width: 80%;"
+							>{abstract}</HoverBlock
+						>
+					{:else}
+						{abstract}
+					{/if}
+				</span>
+			</row>
 		{/if}
-		<span class="hover-m">
-			{formatNumber(workArr[1], 0)} relevant citations
-		</span>
+		{#if authors.length > 0}
+			<row>
+				<rowheader class="hover-s">
+					Author{authors.length > 1 ? 's' : ''}:
+				</rowheader>
+				<al class="hover-m">
+					{#each authors.slice(0, 3).entries() as [i, author]}
+						<a href={author.link} target="_blank"
+							>{author.name}{author.isOfInst ? '*' : ''}{i < Math.min(authors.length - 1, 2)
+								? ','
+								: ''}
+						</a>
+					{/each}
+					{#if authors.length > 3}
+						<a href={oaLink} target="_blank">& {authors.length - 3} others</a>
+					{/if}
+				</al>
+			</row>
+		{/if}
+		<row>
+			<rowheader class="hover-s">Citations: </rowheader>
+			<span class="hover-m">
+				{citeText}
+			</span>
+		</row>
+		<footnote class="hover-xs">
+			{#if localCount > 0}*: author {fullInstName} ({localCount}/{authors.length}){/if}
+		</footnote>
 	</div>
-	{#if authors.length > 0}
-		<div>
-			<h3 class="hover-m" style="flex: 3">
-				{authors.length} author{authors.length > 1 ? 's' : ''}
-				{#if localCount > 0}({localCount} {fullInstName}){/if}
-			</h3>
-			<al class="hover-m" style="flex: 7">
-				{#each authors.slice(0, 3) as author}
-					<a href={author.link} class={author.isOfInst ? 'bold' : ''} target="_blank"
-						>{author.name}</a
-					>
-				{/each}
-
-				{#if authors.length > 3}
-					<a {href} target="_blank">{authors.length - 3} others</a>
-				{/if}
-			</al>
-		</div>
-	{/if}
-	<hr />
 {/if}
 
 <style>
-	:root {
-		--side-pad: 20px;
-	}
-
-	a:hover {
-		font-weight: inherit;
+	h3 {
+		margin: 0px;
 	}
 
 	a {
 		text-decoration: underline;
 	}
 
-	h3,
-	h4 {
-		text-align: center;
-		margin: 0px;
-		padding-left: var(--side-pad);
-		padding-right: var(--side-pad);
-	}
-
-	span {
-		padding-left: var(--side-pad);
-		padding-right: var(--side-pad);
-	}
-
-	hr {
-		width: 80%;
-	}
-
-	div {
+	row {
 		width: 100%;
-		margin: 12px;
 		display: flex;
-		flex-direction: row;
-		justify-content: space-around;
-		align-items: center;
+		gap: 20px;
+		justify-content: space-between;
 	}
 
 	al {
@@ -131,14 +145,22 @@
 		flex-direction: row;
 		justify-content: space-around;
 		align-items: center;
-		padding-right: var(--side-pad);
 	}
 
 	al > a {
-		padding-left: 5px;
+		padding-left: 15px;
 	}
 
-	.bold {
-		font-weight: 600;
+	footnote {
+		width: 100%;
+		text-align: right;
+	}
+
+	#main {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
+		align-items: start;
 	}
 </style>
